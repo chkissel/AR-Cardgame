@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import cv2
 from featureDesc import FeatureDescriptor
+from card import Card
 
 
 def game():
+    card = Card('card_1')
+
     cap = cv2.VideoCapture(0)
     mode = 0
     while True:
