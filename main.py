@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import cv2
 from featureDesc import FeatureDescriptor
+from featureMatch import FeatureMatcher
 from card import Card
 
 
@@ -26,6 +27,11 @@ def game():
         if mode == 1:
             # Extract keypoints
             kp, des = features.extract()
+
+            # Match extracted keypoints and card keypoints
+            matcher = FeatureMatcher(kp, des, card.kp, card.des)
+            matches = matcher.match()
+            # frame = matcher.draw(matches, frame, card.img)
 
         # Display the resulting frame
         cv2.imshow('frame', frame)
