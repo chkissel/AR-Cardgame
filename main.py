@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import cv2
+
 from featureDesc import FeatureDescriptor
 from featureMatch import FeatureMatcher
+from homography import Homography
+
 from card import Card
 
 
@@ -21,7 +24,7 @@ def game():
         ch = cv2.waitKey(1) & 0xFF
         if ch == ord('1'):
             mode = 1
-        elif ch == ord('q'):
+        elif ch == ord('q') or ch == 27:
             break
 
         if mode == 1:
@@ -32,6 +35,11 @@ def game():
             matcher = FeatureMatcher(kp, des, card.kp, card.des)
             matches = matcher.match()
             # frame = matcher.draw(matches, frame, card.img)
+
+            # Calculate homography matrix
+            homography = Homography(kp, card.kp, matches)
+            H = homography.compute()
+            frame = homography.draw(frame, card.img, H)
 
         # Display the resulting frame
         cv2.imshow('frame', frame)
