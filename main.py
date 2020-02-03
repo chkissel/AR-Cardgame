@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 import cv2
+import numpy as np
 
-from featureDesc import FeatureDescriptor
-from featureMatch import FeatureMatcher
-from homography import Homography
+from featureClass import FeatureClass
+from geometryClass import GeometryClass
 
 from card import Card
 
 
 def game():
-    card = Card('card_1')
+    # Initialize instances
+    features = FeatureClass(max_matches = 20)
+    geometry = GeometryClass()
 
-    cap = cv2.VideoCapture(0)
+    card = Card('card_1', features)
+
+    cap = cv2.VideoCapture(1)
     mode = 0
     while True:
         # Capture frame-by-frame
         ret_cam, frame = cap.read()
-
-        # Initialize instances
-        features = FeatureDescriptor(frame)
 
         # wait for key and switch to mode
         ch = cv2.waitKey(1) & 0xFF
@@ -29,17 +30,18 @@ def game():
 
         if mode == 1:
             # Extract keypoints
-            kp, des = features.extract()
+            kp, des = features.extract(frame)
 
             # Match extracted keypoints and card keypoints
-            matcher = FeatureMatcher(kp, des, card.kp, card.des)
-            matches = matcher.match()
-            # frame = matcher.draw(matches, frame, card.img)
+            matches = features.match(des, card.des)
+            # frame = features.draw(matches, frame, card.img, kp, card.kp)
 
             # Calculate homography matrix
-            homography = Homography(kp, card.kp, matches)
-            H = homography.compute()
-            frame = homography.draw(frame, card.img, H)
+            H = geometry.computeHomography(kp, card.kp, matches)
+            # frame = geometry.draw(frame, card.img, H)
+
+            projection = geometry.calcProjection(H)
+            frame = render(frame, card.obj, projection, card.img, False)
 
         # Display the resulting frame
         cv2.imshow('frame', frame)
@@ -48,6 +50,28 @@ def game():
     cap.release()
     cv2.destroyAllWindows()
 
+def render(img, obj, projection, card_img, color=False):
+    vertices = obj.vertices
+    scale_matrix = np.eye(3) * 3
+    h, w = card_img.shape
+
+    for face in obj.faces:
+        face_vertices = face[0]
+        points = np.array([vertices[vertex - 1] for vertex in face_vertices])
+        points = np.dot(points, scale_matrix)
+        # render model in the middle of the reference surface. To do so,
+        # model points must be displaced
+        points = np.array([[p[0] + w / 2, p[1] + h / 2, p[2]] for p in points])
+        dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
+        imgpts = np.int32(dst)
+        if color is False:
+            cv2.fillConvexPoly(img, imgpts, (137, 27, 211))
+        else:
+            color = hex_to_rgb(face[-1])
+            color = color[::-1] # reverse
+            cv2.fillConvexPoly(img, imgpts, color)
+
+    return img
 
 if __name__ == "__main__":
     game()
