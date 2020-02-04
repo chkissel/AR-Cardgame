@@ -29,6 +29,9 @@ class FeatureClass:
         # Sort them in the order of their distance
         matches = sorted(matches, key=lambda x: x.distance)
 
+        # Limit amount of found matches, should be around 50
+        matches = matches[:self.MAXMATCHES]
+
         return matches
 
     def draw(self, matches, img, card_img, img_kp, card_kp):
