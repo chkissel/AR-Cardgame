@@ -9,10 +9,10 @@ from geometryClass import GeometryClass
 from card import Card
 
 
-def game(fps):
+def game(fps, video):
     if (fps):
         start_time = time.time()
-        x = 1 # displays the frame rate every 1 second
+        interval = 3 # displays the frame rate every x second
         counter = 0
 
     # Initialize instances
@@ -25,6 +25,8 @@ def game(fps):
     # cards = [card_1]
 
     cap = cv2.VideoCapture(0)
+    if (video):
+        out = cv2.VideoWriter('output.avi', -1, 20.0, (640,480))
     mode = 0
     while True:
         # Capture frame-by-frame
@@ -54,18 +56,23 @@ def game(fps):
                     projection = geometry.calcProjection(H)
                     frame = render(frame, card.obj, card.scale, card.color, card.img, projection, False)
 
+        if (video):
+            out.write(frame)
+
         # Display the resulting frame
         cv2.imshow('frame', frame)
 
         if (fps):
             counter+=1
-            if (time.time() - start_time) > x :
+            if (time.time() - start_time) > interval :
                 print("FPS: ", counter / (time.time() - start_time))
                 counter = 0
                 start_time = time.time()
 
     # When everything done, release the capture
     cap.release()
+    if (video):
+        out.release()
     cv2.destroyAllWindows()
 
 def render(img, obj, scale, fill, card_img, projection, color=False):
@@ -92,4 +99,4 @@ def render(img, obj, scale, fill, card_img, projection, color=False):
     return img
 
 if __name__ == "__main__":
-    game(fps=True)
+    game(fps=True, video=False)
