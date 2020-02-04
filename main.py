@@ -10,12 +10,12 @@ from card import Card
 
 def game():
     # Initialize instances
-    features = FeatureClass(max_matches = 20)
+    features = FeatureClass(min_matches = 20, max_matches = 50)
     geometry = GeometryClass()
 
-    card = Card('card_1', features)
+    card = Card('card_1', 50, features)
 
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     mode = 0
     while True:
         # Capture frame-by-frame
@@ -36,12 +36,14 @@ def game():
             matches = features.match(des, card.des)
             # frame = features.draw(matches, frame, card.img, kp, card.kp)
 
-            # Calculate homography matrix
-            H = geometry.computeHomography(kp, card.kp, matches)
-            # frame = geometry.draw(frame, card.img, H)
+            #-- Problem: there are like 200 matches found, without card in frame
+            if len(matches) > features.MINMATCHES:
+                # Calculate homography matrix
+                H = geometry.computeHomography(kp, card.kp, matches)
+                frame = geometry.draw(frame, card.img, H)
 
-            projection = geometry.calcProjection(H)
-            frame = render(frame, card.obj, projection, card.img, False)
+                projection = geometry.calcProjection(H)
+                frame = render(frame, card.obj, card.scale, projection, card.img, False)
 
         # Display the resulting frame
         cv2.imshow('frame', frame)
@@ -50,9 +52,9 @@ def game():
     cap.release()
     cv2.destroyAllWindows()
 
-def render(img, obj, projection, card_img, color=False):
+def render(img, obj, scale, projection, card_img, color=False):
     vertices = obj.vertices
-    scale_matrix = np.eye(3) * 3
+    scale_matrix = np.eye(3) * scale
     h, w = card_img.shape
 
     for face in obj.faces:
@@ -65,7 +67,7 @@ def render(img, obj, projection, card_img, color=False):
         dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
         imgpts = np.int32(dst)
         if color is False:
-            cv2.fillConvexPoly(img, imgpts, (137, 27, 211))
+            cv2.fillConvexPoly(img, imgpts, (27, 27, 211))
         else:
             color = hex_to_rgb(face[-1])
             color = color[::-1] # reverse

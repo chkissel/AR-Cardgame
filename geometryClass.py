@@ -26,7 +26,7 @@ class GeometryClass:
 
         # Transform points and build frame out of edges
         dst = cv2.perspectiveTransform(pts, homography)
-        drawn = cv2.polylines(img, [np.int32(dst)], True, 255, 2, cv2.LINE_AA)
+        drawn = cv2.polylines(img, [np.int32(dst)], True, 255, 1, cv2.LINE_AA)
 
         return drawn
 
