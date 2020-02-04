@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import cv2
 import numpy as np
+import time
 
 from featureClass import FeatureClass
 from geometryClass import GeometryClass
@@ -8,14 +9,20 @@ from geometryClass import GeometryClass
 from card import Card
 
 
-def game():
+def game(fps):
+    if (fps):
+        start_time = time.time()
+        x = 1 # displays the frame rate every 1 second
+        counter = 0
+
     # Initialize instances
-    features = FeatureClass(min_matches = 25, max_matches = 50)
+    features = FeatureClass(min_matches = 10, max_matches = 50)
     geometry = GeometryClass()
 
     card_1 = Card('card_1', 50, (27, 27, 211), features)
     card_2 = Card('card_2', 50, (211, 27, 27), features)
     cards = [card_1, card_2]
+    # cards = [card_1]
 
     cap = cv2.VideoCapture(0)
     mode = 0
@@ -39,17 +46,23 @@ def game():
                 matches = features.match(des, card.des)
                 # frame = features.draw(matches, frame, card.img, kp, card.kp)
 
-                #-- Problem: there are like 200 matches found, without card in frame
                 if len(matches) > features.MINMATCHES:
                     # Calculate homography matrix
                     H = geometry.computeHomography(kp, card.kp, matches)
-                    frame = geometry.draw(frame, card.img, H)
+                    frame = geometry.drawRect(frame, card.img, card.color, H)
 
                     projection = geometry.calcProjection(H)
                     frame = render(frame, card.obj, card.scale, card.color, card.img, projection, False)
 
         # Display the resulting frame
         cv2.imshow('frame', frame)
+
+        if (fps):
+            counter+=1
+            if (time.time() - start_time) > x :
+                print("FPS: ", counter / (time.time() - start_time))
+                counter = 0
+                start_time = time.time()
 
     # When everything done, release the capture
     cap.release()
@@ -79,4 +92,4 @@ def render(img, obj, scale, fill, card_img, projection, color=False):
     return img
 
 if __name__ == "__main__":
-    game()
+    game(fps=True)

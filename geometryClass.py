@@ -19,14 +19,14 @@ class GeometryClass:
 
         return H
 
-    def draw(self, img, card_img, homography):
+    def drawRect(self, img, card_img, card_color, homography):
         # Build edge points out of card image
         h, w = card_img.shape
         pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
 
         # Transform points and build frame out of edges
         dst = cv2.perspectiveTransform(pts, homography)
-        drawn = cv2.polylines(img, [np.int32(dst)], True, 255, 1, cv2.LINE_AA)
+        drawn = cv2.polylines(img, [np.int32(dst)], True, card_color, 1, cv2.LINE_AA)
 
         return drawn
 
