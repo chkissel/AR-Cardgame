@@ -16,11 +16,11 @@ def game(fps, video):
         counter = 0
 
     # Initialize instances
-    features = FeatureClass(min_matches = 10, max_matches = 50)
+    features = FeatureClass(min_matches = 20, max_matches = 75)
     geometry = GeometryClass()
 
     card_1 = Card('card_1', 50, (27, 27, 211), features)
-    card_2 = Card('card_2', 50, (211, 27, 27), features)
+    card_2 = Card('card_2', 25, (211, 27, 27), features)
     cards = [card_1, card_2]
     # cards = [card_1]
 

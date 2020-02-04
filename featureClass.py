@@ -32,7 +32,13 @@ class FeatureClass:
         # Limit amount of found matches, should be around 50
         matches = matches[:self.MAXMATCHES]
 
-        return matches
+        # Apply ratio test
+        good = []
+        for m in matches:
+            if m.distance < 50:
+                good.append(m)
+
+        return good
 
     def draw(self, matches, img, card_img, img_kp, card_kp):
         # Draws matches between image and reference image
