@@ -15,7 +15,7 @@ def game():
 
     card = Card('card_1', features)
 
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     mode = 0
     while True:
         # Capture frame-by-frame
@@ -39,8 +39,8 @@ def game():
             # Calculate homography matrix
             H = geometry.computeHomography(kp, card.kp, matches)
             # frame = geometry.draw(frame, card.img, H)
-
             projection = geometry.calcProjection(H)
+            print(projection)
             frame = render(frame, card.obj, projection, card.img, False)
 
         # Display the resulting frame
