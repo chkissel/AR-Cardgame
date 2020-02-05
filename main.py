@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import cv2
 import numpy as np
+import time
 
 from featureClass import FeatureClass
 from geometryClass import GeometryClass
@@ -8,14 +9,24 @@ from geometryClass import GeometryClass
 from card import Card
 
 
-def game():
+def game(fps, video):
+    if (fps):
+        start_time = time.time()
+        interval = 3 # displays the frame rate every x second
+        counter = 0
+
     # Initialize instances
-    features = FeatureClass(max_matches = 20)
+    features = FeatureClass(min_matches = 20, max_matches = 75)
     geometry = GeometryClass()
 
-    card = Card('card_1', features)
+    card_1 = Card('card_1', 50, (27, 27, 211), features)
+    card_2 = Card('card_2', 25, (211, 27, 27), features)
+    # cards = [card_1, card_2]
+    cards = [card_1]
 
     cap = cv2.VideoCapture(0)
+    if (video):
+        out = cv2.VideoWriter('output.avi', -1, 20.0, (640,480))
     mode = 0
     while True:
         # Capture frame-by-frame
@@ -32,27 +43,40 @@ def game():
             # Extract keypoints
             kp, des = features.extract(frame)
 
-            # Match extracted keypoints and card keypoints
-            matches = features.match(des, card.des)
-            # frame = features.draw(matches, frame, card.img, kp, card.kp)
+            for card in cards:
+                # Match extracted keypoints and card keypoints
+                matches = features.match(des, card.des)
+                # frame = features.draw(matches, frame, card.img, kp, card.kp)
 
-            # Calculate homography matrix
-            H = geometry.computeHomography(kp, card.kp, matches)
-            # frame = geometry.draw(frame, card.img, H)
-            projection = geometry.calcProjection(H)
-            print(projection)
-            frame = render(frame, card.obj, projection, card.img, False)
+                if len(matches) > features.MINMATCHES:
+                    # Calculate homography matrix
+                    H = geometry.computeHomography(kp, card.kp, matches)
+                    frame = geometry.drawRect(frame, card.img, card.color, H)
+                    projection = geometry.calcProjection(H)
+                    frame = render(frame, card.obj, card.scale, card.color, card.img, projection, False)
+
+        if (video):
+            out.write(frame)
 
         # Display the resulting frame
         cv2.imshow('frame', frame)
 
+        if (fps):
+            counter+=1
+            if (time.time() - start_time) > interval :
+                print("FPS: ", counter / (time.time() - start_time))
+                counter = 0
+                start_time = time.time()
+
     # When everything done, release the capture
     cap.release()
+    if (video):
+        out.release()
     cv2.destroyAllWindows()
 
-def render(img, obj, projection, card_img, color=False):
+def render(img, obj, scale, fill, card_img, projection, color=False):
     vertices = obj.vertices
-    scale_matrix = np.eye(3) * 3
+    scale_matrix = np.eye(3) * scale
     h, w = card_img.shape
 
     for face in obj.faces:
@@ -65,7 +89,7 @@ def render(img, obj, projection, card_img, color=False):
         dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
         imgpts = np.int32(dst)
         if color is False:
-            cv2.fillConvexPoly(img, imgpts, (137, 27, 211))
+            cv2.fillConvexPoly(img, imgpts, fill)
         else:
             color = hex_to_rgb(face[-1])
             color = color[::-1] # reverse
@@ -74,4 +98,4 @@ def render(img, obj, projection, card_img, color=False):
     return img
 
 if __name__ == "__main__":
-    game()
+    game(fps=True, video=False)

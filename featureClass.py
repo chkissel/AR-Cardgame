@@ -3,8 +3,9 @@ import cv2
 
 class FeatureClass:
 
-    def __init__(self, max_matches=20):
-        self.MATCHES = max_matches
+    def __init__(self, min_matches=10, max_matches=20):
+        self.MINMATCHES = min_matches
+        self.MAXMATCHES = max_matches
 
         # Initiate BruteForce Matcher
         self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
@@ -28,11 +29,20 @@ class FeatureClass:
         # Sort them in the order of their distance
         matches = sorted(matches, key=lambda x: x.distance)
 
-        return matches
+        # Limit amount of found matches, should be around 50
+        matches = matches[:self.MAXMATCHES]
+
+        # Apply ratio test
+        good = []
+        for m in matches:
+            if m.distance < 75:
+                good.append(m)
+
+        return good
 
     def draw(self, matches, img, card_img, img_kp, card_kp):
         # Draws matches between image and reference image
         matched = cv2.drawMatches(img, img_kp, card_img, card_kp,
-                              matches[:self.MATCHES], 0, flags=2)
+                              matches[:self.MAXMATCHES], 0, flags=2)
 
         return matched
