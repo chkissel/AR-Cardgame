@@ -35,7 +35,7 @@ class FeatureClass:
         # Apply ratio test
         good = []
         for m in matches:
-            if m.distance < 50:
+            if m.distance < 75:
                 good.append(m)
 
         return good

@@ -21,8 +21,8 @@ def game(fps, video):
 
     card_1 = Card('card_1', 50, (27, 27, 211), features)
     card_2 = Card('card_2', 25, (211, 27, 27), features)
-    cards = [card_1, card_2]
-    # cards = [card_1]
+    # cards = [card_1, card_2]
+    cards = [card_1]
 
     cap = cv2.VideoCapture(0)
     if (video):

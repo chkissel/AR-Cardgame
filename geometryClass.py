@@ -34,11 +34,11 @@ class GeometryClass:
         # Compute rotation along the x and y axis as well as the translation
         homography = homography * (-1)
         rot_and_transl = np.dot(np.linalg.inv(self.camera_params), homography)
-        col_1 = rot_and_transl[:, 0]
-        col_2 = rot_and_transl[:, 1]
-        col_3 = rot_and_transl[:, 2]
+        col_1 = rot_and_transl[:, 0] # rot1
+        col_2 = rot_and_transl[:, 1] # rot2
+        col_3 = rot_and_transl[:, 2] # trans
 
-        # normalise vectors
+        # Normalize vectors
         l = math.sqrt(np.linalg.norm(col_1, 2) * np.linalg.norm(col_2, 2))
         rot_1 = col_1 / l
         rot_2 = col_2 / l
@@ -52,6 +52,17 @@ class GeometryClass:
         rot_2 = np.dot(c / np.linalg.norm(c, 2) - d / np.linalg.norm(d, 2), 1 / math.sqrt(2))
         rot_3 = np.cross(rot_1, rot_2)
 
-        # finally, compute the 3D projection matrix from the model to the current frame
-        projection = np.stack((rot_1, rot_2, rot_3, translation)).T
+        # projection = np.stack((rot_1, rot_2, rot_3, translation)).T
+        # print('pre', projection)
+
+        # rotate before translation
+        projection = np.array([rot_1, rot_2, rot_3]).T
+
+        theta = np.radians(0)
+        rot_z = np.matrix([[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]])
+        projection = np.dot(rot_z, projection)
+
+        # Add translation as last column
+        projection = np.c_[ projection, translation]
+
         return np.dot(self.camera_params, projection)
