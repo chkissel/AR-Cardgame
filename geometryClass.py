@@ -8,14 +8,27 @@ class GeometryClass:
     def __init__(self):
         self.camera_params = np.array([[850, 0, 330], [0, 850, 230], [0, 0, 1]])
         # ^ Values are rounded from multiple chessboard calibrations
+        self.last_Hs = []
+        self.max_Hs = 5
 
     def computeHomography(self, img_kp, card_kp, matches):
         # Collect the matching keypoints in both images
         src_pts = np.float32([img_kp[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
         dst_pts = np.float32([card_kp[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
 
+
         # Compute Homography with ransac
         H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+
+        # Smooth the result over multiple frames
+        # self.last_Hs.append(H)
+        # if len(self.last_Hs) > self.max_Hs:
+        #     self.last_Hs.pop(0)
+        #
+        # for h in self.last_Hs:
+        #     H = H + h
+        #
+        # H = H / len(self.last_Hs)
 
         return H
 
@@ -44,6 +57,19 @@ class GeometryClass:
         rot_2 = col_2 / l
         translation = col_3 / l
 
+        # This mess turns the model to the left / right based on card direction
+        # theta = np.radians(90)
+        # row_1 = [np.cos(theta), -np.sin(theta), 0]
+        # row_2 = [np.sin(theta), np.cos(theta), 0]
+        # row_3 = [0, 0, 1]
+        # rot_mat = np.array([row_1, row_2, row_3])
+        #
+        # rotations = np.array([rot_1, rot_2, [0, 0, 1]]).T
+        # rotations = rot_mat * rotations
+        #
+        # rot_1 = rotations[:, 0]
+        # rot_2 = rotations[:, 1]
+
         # compute the orthonormal basis
         c = rot_1 + rot_2
         p = np.cross(rot_1, rot_2)
@@ -55,12 +81,21 @@ class GeometryClass:
         # projection = np.stack((rot_1, rot_2, rot_3, translation)).T
         # print('pre', projection)
 
-        # rotate before translation
+        # rotate before adding translation
         projection = np.array([rot_1, rot_2, rot_3]).T
 
-        theta = np.radians(0)
-        rot_z = np.matrix([[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]])
-        projection = np.dot(rot_z, projection)
+        # This mess turns the card around the given degree
+        # however the model now has a noticable offset to the center
+        # theta = np.radians(90)
+        ## row_1 = [np.cos(theta), -np.sin(theta), -translation[0]*np.cos(theta)+translation[1]*np.sin(theta)+translation[0]]
+        ## row_2 = [np.sin(theta), np.cos(theta), -translation[0]*np.sin(theta)-translation[1]*np.cos(theta)+translation[1]]
+        # row_1 = [np.cos(theta), -np.sin(theta), 0]
+        # row_2 = [np.sin(theta), np.cos(theta), 0]
+        # row_3 = [0, 0, 1]
+        # rot_z = np.matrix([row_1, row_2, row_3])
+        # print(rot_z)
+        # projection = rot_z * projection
+        # translation = np.dot(translation, rot_z)
 
         # Add translation as last column
         projection = np.c_[ projection, translation]
