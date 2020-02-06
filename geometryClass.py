@@ -65,4 +65,4 @@ class GeometryClass:
         # Add translation as last column
         projection = np.c_[ projection, translation]
 
-        return np.dot(self.camera_params, projection)
+        return np.dot(self.camera_params, projection), translation
