@@ -19,8 +19,8 @@ def game(fps, video):
     features = FeatureClass(min_matches = 20, max_matches = 50)
     geometry = GeometryClass()
 
-    card_1 = Card('card_1', 50, (27, 27, 211), features)
-    card_2 = Card('card_5', 50, (211, 27, 27), features)
+    card_1 = Card('card_1', 50, features)
+    card_2 = Card('card_5', 50, features)
     cards = [card_1, card_2]
     # cards = [card_1]
 
@@ -51,10 +51,11 @@ def game(fps, video):
                 if len(matches) > features.MINMATCHES:
                     # Calculate homography matrix
                     H = geometry.computeHomography(kp, card.kp, matches)
-                    frame = geometry.drawRect(frame, card.img, card.color, H)
+                    width, color = geometry.checkRotation(H)
+                    frame = geometry.drawRect(frame, card.img, width, color, H)
 
                     projection = geometry.calcProjection(H)
-                    frame = render(frame, card.obj, card.scale, card.color, card.img, projection, False)
+                    frame = render(frame, card.obj, card.scale, color, card.img, projection, False)
 
         if (video):
             out.write(frame)

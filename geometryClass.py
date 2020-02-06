@@ -32,16 +32,38 @@ class GeometryClass:
 
         return H
 
-    def drawRect(self, img, card_img, card_color, homography):
+    def drawRect(self, img, card_img, width, color, homography):
         # Build edge points out of card image
         h, w = card_img.shape
         pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
 
         # Transform points and build frame out of edges
         dst = cv2.perspectiveTransform(pts, homography)
-        drawn = cv2.polylines(img, [np.int32(dst)], True, card_color, 1, cv2.LINE_AA)
+        drawn = cv2.polylines(img, [np.int32(dst)], True, color, width, cv2.LINE_AA)
 
         return drawn
+
+    def checkRotation(self, homography):
+        p1_color = (211, 27, 27)
+        p2_color = (27, 27, 211)
+
+        active_width = 3
+        inactive_width = 1
+
+        # Check if left or right player
+        if homography[0,1] < 0:
+            color = p1_color
+        else:
+            color = p2_color
+
+        # Check if card is active or inactive
+        width = inactive_width
+
+        h_degree = np.degrees(math.atan2(homography[0,1] , homography[1,1]))
+        if (h_degree > 45 and h_degree < 135) or (h_degree < -45 and h_degree > -135):
+            width = active_width
+
+        return width, color
 
     def calcProjection(self, homography):
         # Compute rotation along the x and y axis as well as the translation
@@ -78,26 +100,55 @@ class GeometryClass:
         rot_2 = np.dot(c / np.linalg.norm(c, 2) - d / np.linalg.norm(d, 2), 1 / math.sqrt(2))
         rot_3 = np.cross(rot_1, rot_2)
 
-        # projection = np.stack((rot_1, rot_2, rot_3, translation)).T
-        # print('pre', projection)
-
         # rotate before adding translation
         projection = np.array([rot_1, rot_2, rot_3]).T
 
-        # This mess turns the card around the given degree
+        # Turns the card around the given degree
         # however the model now has a noticable offset to the center
-        # theta = np.radians(90)
-        ## row_1 = [np.cos(theta), -np.sin(theta), -translation[0]*np.cos(theta)+translation[1]*np.sin(theta)+translation[0]]
-        ## row_2 = [np.sin(theta), np.cos(theta), -translation[0]*np.sin(theta)-translation[1]*np.cos(theta)+translation[1]]
+        # theta = np.radians(180)
         # row_1 = [np.cos(theta), -np.sin(theta), 0]
         # row_2 = [np.sin(theta), np.cos(theta), 0]
         # row_3 = [0, 0, 1]
         # rot_z = np.matrix([row_1, row_2, row_3])
-        # print(rot_z)
+        #
         # projection = rot_z * projection
-        # translation = np.dot(translation, rot_z)
+        # print(self.rotationMatrixToEulerAngles(projection))
+        # the rotation around z axis works as intended
 
         # Add translation as last column
         projection = np.c_[ projection, translation]
 
         return np.dot(self.camera_params, projection)
+
+
+    # credits: https://www.learnopencv.com/rotation-matrix-to-euler-angles/
+    # Checks if a matrix is a valid rotation matrix.
+    def isRotationMatrix(self, R) :
+        Rt = np.transpose(R)
+        shouldBeIdentity = np.dot(Rt, R)
+        I = np.identity(3, dtype = R.dtype)
+        n = np.linalg.norm(I - shouldBeIdentity)
+        return n < 1e-6
+
+    # credits: https://www.learnopencv.com/rotation-matrix-to-euler-angles/
+    # Calculates rotation matrix to euler angles
+    # The result is the same as MATLAB except the order
+    # of the euler angles ( x and z are swapped ).
+    def rotationMatrixToEulerAngles(self, R) :
+
+        assert(self.isRotationMatrix(R))
+
+        sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
+
+        singular = sy < 1e-6
+
+        if  not singular :
+            x = math.atan2(R[2,1] , R[2,2])
+            y = math.atan2(-R[2,0], sy)
+            z = math.atan2(R[1,0], R[0,0])
+        else :
+            x = math.atan2(-R[1,2], R[1,1])
+            y = math.atan2(-R[2,0], sy)
+            z = 0
+
+        return np.array([np.degrees(x), np.degrees(y), np.degrees(z)])

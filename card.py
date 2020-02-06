@@ -4,7 +4,7 @@ from objloader_simple import *
 
 class Card:
 
-    def __init__(self, name, scale, color, featureInstance):
+    def __init__(self, name, scale, featureInstance):
         self.name = name
 
         img = cv2.imread('assets/' + name + '.png')
@@ -13,7 +13,6 @@ class Card:
         obj = OBJ(('assets/' + name + '.obj'), swapyz=True)
         self.obj = obj
         self.scale = scale
-        self.color = color
 
         self.kp, self.des = featureInstance.extract(self.img)
 
