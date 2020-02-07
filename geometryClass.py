@@ -61,8 +61,10 @@ class GeometryClass:
         theta = np.radians(0)
         rot_z = np.matrix([[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]])
         projection = np.dot(rot_z, projection)
-
         # Add translation as last column
         projection = np.c_[ projection, translation]
-
         return np.dot(self.camera_params, projection), translation
+        #return projection, translation
+
+    def calcRotation(self):
+        pass
