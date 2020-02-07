@@ -7,6 +7,7 @@ from featureClass import FeatureClass
 from geometryClass import GeometryClass
 from direct.showbase.ShowBase import ShowBase
 from direct.actor.Actor import Actor
+from panda3d.core import Mat4
 
 
 import numpy as np
@@ -41,8 +42,35 @@ class Game(ShowBase):
             # Calculate homography matrix
             H = self.geometry.computeHomography(kp, self.card.kp, matches)
             frame = self.geometry.drawRect(img, self.card.img, self.card.color, H)
-            projection = self.geometry.calcProjection(H)
-            self.translation = projection[:, 3]
+            self.projection, self.translation = self.geometry.calcProjection(H)
+            proj = self.scale(self.projection, 0, 10)
+            proj = np.append(proj, [[0, 0, 0, 1]], axis=0)
+
+            """
+            mat = Mat4(proj[0:1,0:1], proj[1:2,0:1], proj[2:3,0:1], proj[3:,0:1],
+                       proj[0:1,2:3], proj[1:2,2:3], proj[2:3,2:3], proj[3:,2:3],
+                       proj[0:1,1:2], proj[1:2,1:2], proj[2:3,1:2], proj[3:,1:2],
+                       proj[0:1,:3], proj[1:2,:3], proj[2:3,:3], proj[3:,:3])
+                       
+            
+           
+
+
+            self.mat = Mat4(proj.item(0,0), proj.item(0,1), proj.item(0,2), 0,
+                       proj.item(2,0), proj.item(2,1), proj.item(2,2), 25,
+                       proj.item(1,0), proj.item(1,1), proj.item(1,2), 0,
+                       proj.item(3,0), proj.item(3,1), proj.item(3,2), 0)
+
+"""
+            self.mat = Mat4(proj.item(0, 0), proj.item(0, 1), proj.item(0, 2), proj.item(0, 3),
+                            proj.item(1, 0), proj.item(1, 1), proj.item(1, 2), proj.item(1, 3),
+                            proj.item(2, 0), proj.item(2, 1), proj.item(2, 2), proj.item(2, 3),
+                            proj.item(3, 0), proj.item(3, 1), proj.item(3, 2), proj.item(3, 3))
+
+
+            #self.norm_projection = self.scale(self.projection, self.projection.min(), self.projection.max())
+            #self.translation = projection[:, 3]
+
 
             # NORMALIZE! 1 = max, TODO
             # self.norm_trans = (self.translation - np.min(self.translation)) / np.ptp(self.translation)
@@ -106,7 +134,8 @@ class Game(ShowBase):
         # Reparent the model to render.
         self.model.reparentTo(self.render)
         # Apply scale and position transforms on the model.
-        self.model.setScale(0.005, 0.005, 0.005)
+        #self.model.setScale(0.025, 0.025, 0.025)
+        self.model.setScale(0.05, 0.05, 0.05)
 
         # x,y ca. bis 10!
         self.model.setPos(0, 25, 0)
@@ -124,10 +153,20 @@ class Game(ShowBase):
         "looping"
         # z is up! https://docs.panda3d.org/1.10/python/programming/scene-graph/common-state-changes
         # self.model.setPos(self.translation[0], self.translation[2], self.translation[1])
-        self.model.setPos(0, 25, self.translation[1])
-        print(self.model.getPos())
+        self.model.setPos(-1*(self.translation[0]/10), 200, (self.translation[1]/10))
+        #self.model.setPos(0, 25, 0)
+
+        # self.model.setMat(self.mat)
+
         # self.model.setPos(self.norm_trans[0], self.norm_trans[1], self.norm_trans[2])
         return task.cont
+
+    def scale(self, X, x_min, x_max):
+        nom = (X - X.min(axis=0)) * (x_max - x_min)
+        denom = X.max(axis=0) - X.min(axis=0)
+        denom[denom == 0] = 1
+        return x_min + nom / denom
+
 
 app = Game()
 app.run()
