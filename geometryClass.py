@@ -20,15 +20,20 @@ class GeometryClass:
         # Compute Homography with ransac
         H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 
-        # Smooth the result over multiple frames
-        # self.last_Hs.append(H)
-        # if len(self.last_Hs) > self.max_Hs:
-        #     self.last_Hs.pop(0)
-        #
-        # for h in self.last_Hs:
-        #     H = H + h
-        #
-        # H = H / len(self.last_Hs)
+        # H = self.smoothOverFrames(H)
+
+        return H
+
+    def smoothOverFrames(self, H):
+        #Smooth the result over multiple frames
+        self.last_Hs.append(H)
+        if len(self.last_Hs) > self.max_Hs:
+            self.last_Hs.pop(0)
+
+        for h in self.last_Hs:
+            H = H + h
+
+        H = H / len(self.last_Hs)
 
         return H
 
@@ -46,32 +51,30 @@ class GeometryClass:
     def checkRotation(self, homography):
         p1_color = (211, 27, 27)
         p2_color = (27, 27, 211)
+        active = False
 
-        active_width = 3
-        inactive_width = 1
-
-        # Check if left or right player
+        # Check if card belongs to left or right player
         if homography[0,1] < 0:
             color = p1_color
         else:
             color = p2_color
 
         # Check if card is active or inactive
-        width = inactive_width
-
         h_degree = np.degrees(math.atan2(homography[0,1] , homography[1,1]))
         if (h_degree > 45 and h_degree < 135) or (h_degree < -45 and h_degree > -135):
-            width = active_width
+            active = True
+
+        width = 3 if active else 1
 
         return width, color
 
     def calcProjection(self, homography):
         # Compute rotation along the x and y axis as well as the translation
         homography = homography * (-1)
-        rot_and_transl = np.dot(np.linalg.inv(self.camera_params), homography)
-        col_1 = rot_and_transl[:, 0] # rot1
-        col_2 = rot_and_transl[:, 1] # rot2
-        col_3 = rot_and_transl[:, 2] # trans
+        cleared_matrix = np.dot(np.linalg.inv(self.camera_params), homography)
+        col_1 = cleared_matrix[:, 0] # rot1
+        col_2 = cleared_matrix[:, 1] # rot2
+        col_3 = cleared_matrix[:, 2] # trans
 
         # Normalize vectors
         l = math.sqrt(np.linalg.norm(col_1, 2) * np.linalg.norm(col_2, 2))
@@ -122,7 +125,7 @@ class GeometryClass:
 
 
     # credits: https://www.learnopencv.com/rotation-matrix-to-euler-angles/
-    # Checks if a matrix is a valid rotation matrix.
+    # Checks if a matrix is a valid rotation matrix
     def isRotationMatrix(self, R) :
         Rt = np.transpose(R)
         shouldBeIdentity = np.dot(Rt, R)
@@ -132,8 +135,6 @@ class GeometryClass:
 
     # credits: https://www.learnopencv.com/rotation-matrix-to-euler-angles/
     # Calculates rotation matrix to euler angles
-    # The result is the same as MATLAB except the order
-    # of the euler angles ( x and z are swapped ).
     def rotationMatrixToEulerAngles(self, R) :
 
         assert(self.isRotationMatrix(R))
