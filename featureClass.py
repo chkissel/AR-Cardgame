@@ -15,7 +15,8 @@ class FeatureClass:
 
         # Initiate ORB detector
         # self.orb = cv2.ORB_create()
-        self.sift = cv2.xfeatures2d.SIFT_create()
+        # self.sift = cv2.xfeatures2d.SIFT_create()
+        self.sift = cv2.xfeatures2d.SIFT_create(nfeatures=200)
         # self.surf = cv2.xfeatures2d.SURF_create(400)
 
     def extract(self, img):
@@ -47,7 +48,7 @@ class FeatureClass:
         # matches = self.flann.knnMatch(img_des, card_des, k=2)
         good = []
         for m,n in matches:
-            if m.distance < 0.75*n.distance:
+            if m.distance < 0.75*n.distance: # 0.8 for ORB
                 good.append(m)
 
         return good

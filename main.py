@@ -20,7 +20,10 @@ def game(fps, video):
     geometry = GeometryClass()
 
     card_1 = Card('card_1', 50, features)
-    card_2 = Card('card_5', 50, features)
+    card_2 = Card('card_2', 25, features)
+    card_3 = Card('card_6', 25, features)
+    card_4 = Card('card_5', 50, features)
+    # cards = [card_1, card_2, card_3, card_4]
     cards = [card_1, card_2]
     # cards = [card_1]
 
