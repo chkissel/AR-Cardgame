@@ -8,37 +8,49 @@ class FeatureClass:
         self.MAXMATCHES = max_matches
 
         # Initiate BruteForce Matcher
-        self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+        self.bf = cv2.BFMatcher()
+        self.sift = cv2.xfeatures2d.SIFT_create()
 
         # Initiate ORB detector
         self.orb = cv2.ORB_create()
 
     def extract(self, img):
         # find the keypoints with ORB
-        kp = self.orb.detect(img, None)
-
-        # compute the descriptors with ORB
-        kp, des = self.orb.compute(img, kp)
+        # kp = self.orb.detect(img, None)
+        #
+        # # compute the descriptors with ORB
+        # kp, des = self.orb.compute(img, kp)
+        kp, des = self.sift.detectAndCompute(img, None)
 
         return kp, des
 
     def match(self, img_des, card_des):
         # Match frame descriptors with card descriptors
-        matches = self.bf.match(img_des, card_des)
+        # matches = self.bf.match(img_des, card_des)
+        #
+        # # Sort them in the order of their distance
+        # matches = sorted(matches, key=lambda x: x.distance)
+        #
+        # # Limit amount of found matches, should be around 50
+        # matches = matches[:self.MAXMATCHES]
+        #
+        # # Apply ratio test
+        # good = []
+        # for m in matches:
+        #     if m.distance < 75:
+        #         good.append(m)
+        #
+        # return good
 
-        # Sort them in the order of their distance
-        matches = sorted(matches, key=lambda x: x.distance)
-
-        # Limit amount of found matches, should be around 50
-        matches = matches[:self.MAXMATCHES]
-
-        # Apply ratio test
+        matches = self.bf.knnMatch(img_des, card_des, k=2)
+        # matches = self.flann.knnMatch(img_des, card_des, k=2)
         good = []
-        for m in matches:
-            if m.distance < 75:
+        for m,n in matches:
+            if m.distance < 0.75*n.distance: # 0.8 for ORB
                 good.append(m)
 
         return good
+
 
     def draw(self, matches, img, card_img, img_kp, card_kp):
         # Draws matches between image and reference image

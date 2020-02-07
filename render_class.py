@@ -11,7 +11,7 @@ from panda3d.core import Mat4
 
 
 import numpy as np
-
+import math
 
 from card import Card
 
@@ -41,7 +41,7 @@ class Game(ShowBase):
         if len(matches) > self.features.MINMATCHES:
             # Calculate homography matrix
             H = self.geometry.computeHomography(kp, self.card.kp, matches)
-            frame = self.geometry.drawRect(img, self.card.img, self.card.color, H)
+            self.offset, frame = self.geometry.drawRect(img, self.card.img, self.card.color, H)
             self.projection, self.translation = self.geometry.calcProjection(H)
             proj = self.scale(self.projection, 0, 10)
             proj = np.append(proj, [[0, 0, 0, 1]], axis=0)
@@ -51,9 +51,9 @@ class Game(ShowBase):
                        proj[0:1,2:3], proj[1:2,2:3], proj[2:3,2:3], proj[3:,2:3],
                        proj[0:1,1:2], proj[1:2,1:2], proj[2:3,1:2], proj[3:,1:2],
                        proj[0:1,:3], proj[1:2,:3], proj[2:3,:3], proj[3:,:3])
-                       
-            
-           
+
+
+
 
 
             self.mat = Mat4(proj.item(0,0), proj.item(0,1), proj.item(0,2), 0,
@@ -128,14 +128,15 @@ class Game(ShowBase):
         dlight = DirectionalLight('my dlight')
         dlnp = self.render.attachNewNode(dlight)
 
-        #self.model = self.loader.loadModel("assets/card_1.obj")
+        # self.model = self.loader.loadModel("assets/card_1.obj")
+        # self.model.setScale(5.0, 5.0, 5.0)
         self.model = Actor("models/panda-model",
                            {"walk": "models/panda-walk4"})
+        self.model.setScale(0.05, 0.05, 0.05)
         # Reparent the model to render.
         self.model.reparentTo(self.render)
         # Apply scale and position transforms on the model.
         #self.model.setScale(0.025, 0.025, 0.025)
-        self.model.setScale(0.05, 0.05, 0.05)
 
         # x,y ca. bis 10!
         self.model.setPos(0, 25, 0)
@@ -153,12 +154,24 @@ class Game(ShowBase):
         "looping"
         # z is up! https://docs.panda3d.org/1.10/python/programming/scene-graph/common-state-changes
         # self.model.setPos(self.translation[0], self.translation[2], self.translation[1])
-        self.model.setPos(-1*(self.translation[0]/10), 200, (self.translation[1]/10))
-        #self.model.setPos(0, 25, 0)
+        x = -1*(self.translation[0]/10) + self.offset[0]/10
+        y = -self.translation[2]/10
+        z = self.translation[1]/10 - self.offset[1]/10
+        #^ offset is still rigged
 
-        # self.model.setMat(self.mat)
+        print('offset', self.offset)
 
-        # self.model.setPos(self.norm_trans[0], self.norm_trans[1], self.norm_trans[2])
+        self.model.setPos(x, y, z)
+        # self.model.setPos(-1*(self.translation[0]/10), -self.translation[2]/10, self.translation[1]/10)
+
+
+        angles = self.rotationMatrixToEulerAngles(self.projection[:3])
+        # print('angle', np.degrees(angles[1])%360, np.degrees(-angles[0])%360, np.degrees(angles[2])%360)
+
+        self.model.setHpr(angles[1], -angles[0], angles[2])
+        # print(self.model.getHpr())
+        # self.model.setHpr(angles[1], -angles[0] - 90, angles[2])
+
         return task.cont
 
     def scale(self, X, x_min, x_max):
@@ -167,6 +180,24 @@ class Game(ShowBase):
         denom[denom == 0] = 1
         return x_min + nom / denom
 
+    def rotationMatrixToEulerAngles(self, R) :
+
+        # assert(self.isRotationMatrix(R))
+
+        sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
+
+        singular = sy < 1e-6
+
+        if  not singular :
+            x = math.atan2(R[2,1] , R[2,2])
+            y = math.atan2(-R[2,0], sy)
+            z = math.atan2(R[1,0], R[0,0])
+        else :
+            x = math.atan2(-R[1,2], R[1,1])
+            y = math.atan2(-R[2,0], sy)
+            z = 0
+
+        return np.array([np.degrees(x), np.degrees(y), np.degrees(z)])
 
 app = Game()
 app.run()
