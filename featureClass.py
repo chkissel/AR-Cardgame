@@ -10,17 +10,19 @@ class FeatureClass:
 
         # Initiate BruteForce Matcher
         # self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        # self.bf = cv2.BFMatcher()
-        self.flann = cv2.DescriptorMatcher_create(cv2.DescriptorMatcher_FLANNBASED)
+        self.bf = cv2.BFMatcher()
+        # self.flann = cv2.DescriptorMatcher_create(cv2.DescriptorMatcher_FLANNBASED)
 
         # Initiate ORB detector
         # self.orb = cv2.ORB_create()
         self.sift = cv2.xfeatures2d.SIFT_create()
+        # self.surf = cv2.xfeatures2d.SURF_create(400)
 
     def extract(self, img):
         # find the keypoints with ORB
         # kp, des = self.orb.detectAndCompute(img, None)
         kp, des = self.sift.detectAndCompute(img, None)
+        # kp, des = self.surf.detectAndCompute(img, None)
 
         return kp, des
 
@@ -41,8 +43,8 @@ class FeatureClass:
         #     if m.distance < self.MAXDISTANCE:
         #         good.append(m)
 
-        # matches = self.bf.knnMatch(img_des, card_des, k=2)
-        matches = self.flann.knnMatch(img_des, card_des, k=2)
+        matches = self.bf.knnMatch(img_des, card_des, k=2)
+        # matches = self.flann.knnMatch(img_des, card_des, k=2)
         good = []
         for m,n in matches:
             if m.distance < 0.75*n.distance:
