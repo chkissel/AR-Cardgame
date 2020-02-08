@@ -132,7 +132,9 @@ class Game(ShowBase):
         # self.model.setScale(5.0, 5.0, 5.0)
         self.model = Actor("models/panda-model",
                            {"walk": "models/panda-walk4"})
-        self.model.setScale(0.05, 0.05, 0.05)
+        # Scale and flip model on Y
+        self.model.setScale(0.03, -0.03, 0.03)
+        self.model.setAttrib(CullFaceAttrib.makeReverse())
         # Reparent the model to render.
         self.model.reparentTo(self.render)
         # Apply scale and position transforms on the model.
@@ -147,30 +149,41 @@ class Game(ShowBase):
         self.taskMgr.add(self.turn, "turn")
 
     def turn(self, task):
-        # continually call cap.read() here to update the texture
         self.get_cv_img()
         self.test.setTexture(self.tex)
-        print
-        "looping"
+
         # z is up! https://docs.panda3d.org/1.10/python/programming/scene-graph/common-state-changes
-        # self.model.setPos(self.translation[0], self.translation[2], self.translation[1])
-        x = -1*(self.translation[0]/10) + self.offset[0]/10
+
+        x = -self.translation[0]/10# + self.offset[0]/10
         y = -self.translation[2]/10
-        z = self.translation[1]/10 - self.offset[1]/10
+        z = self.translation[1]/10# - self.offset[1]/10
         #^ offset is still rigged
 
-        print('offset', self.offset)
-
         self.model.setPos(x, y, z)
-        # self.model.setPos(-1*(self.translation[0]/10), -self.translation[2]/10, self.translation[1]/10)
-
 
         angles = self.rotationMatrixToEulerAngles(self.projection[:3])
-        # print('angle', np.degrees(angles[1])%360, np.degrees(-angles[0])%360, np.degrees(angles[2])%360)
 
-        self.model.setHpr(angles[1], -angles[0], angles[2])
+        # works as long as z == 0
+        z = angles[2] + 180
+        x = angles[1]
+        y = -angles[0] + 90
+        # print('z', abs(z * 0.01))
+        # print(abs(z) * 0.01)
+        # print(abs(z))
+        # print(math.sin(abs(z)))
+        # flip = abs(math.sin(abs(z) * 0.01))
+        # print('flip', flip, (1-flip))
+        # x = (1-flip) * x - flip * y
+        # y = (1-flip) * y + flip * x
+
+
+        # x = x * math.cos(z) - y * math.sin(z)
+        # y = x * math.sin(z) + y * math.cos(z)
+
+        self.model.setHpr(x, y, z)
+
+        # if z is no longer 0 x and y are flipped
         # print(self.model.getHpr())
-        # self.model.setHpr(angles[1], -angles[0] - 90, angles[2])
 
         return task.cont
 
