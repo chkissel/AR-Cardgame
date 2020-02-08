@@ -44,9 +44,17 @@ class GeometryClass:
 
         # Transform points and build frame out of edges
         dst = cv2.perspectiveTransform(pts, homography)
+
+        offset = self.calcCenter(dst)
         drawn = cv2.polylines(img, [np.int32(dst)], True, color, width, cv2.LINE_AA)
 
-        return drawn
+        return offset, drawn
+
+    def calcCenter(self, arr):
+        dist_long = math.sqrt((arr[0,0,0] - arr[1,0,0])**2 + (arr[0,0,1] - arr[1,0,1])**2)
+        dist_short = math.sqrt((arr[1,0,0] - arr[2,0,0])**2 + (arr[1,0,1] - arr[2,0,1])**2)
+
+        return [dist_long, dist_short]
 
     def checkRotation(self, homography):
         p1_color = (211, 27, 27)
@@ -121,7 +129,9 @@ class GeometryClass:
         # Add translation as last column
         projection = np.c_[ projection, translation]
 
-        return np.dot(self.camera_params, projection)
+        # return np.dot(self.camera_params, projection)
+        # return np.dot(self.camera_params, projection), translation
+        return projection, translation
 
 
     # credits: https://www.learnopencv.com/rotation-matrix-to-euler-angles/

@@ -24,8 +24,8 @@ def game(fps, video):
     card_3 = Card('card_6', 25, features)
     card_4 = Card('card_5', 50, features)
     # cards = [card_1, card_2, card_3, card_4]
-    cards = [card_1, card_2]
-    # cards = [card_1]
+    # cards = [card_1, card_2]
+    cards = [card_1]
 
     cap = cv2.VideoCapture(0)
     if (video):
@@ -55,7 +55,7 @@ def game(fps, video):
                     # Calculate homography matrix
                     H = geometry.computeHomography(kp, card.kp, matches)
                     width, color = geometry.checkRotation(H)
-                    frame = geometry.drawRect(frame, card.img, width, color, H)
+                    offset, frame = geometry.drawRect(frame, card.img, width, color, H)
 
                     projection = geometry.calcProjection(H)
                     frame = render(frame, card.obj, card.scale, color, card.img, projection, False)
