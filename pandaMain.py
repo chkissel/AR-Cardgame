@@ -32,7 +32,7 @@ class Game(ShowBase):
         if len(matches) > self.features.MINMATCHES:
             # Homography & projection matrix
             H = self.geometry.computeHomography(kp, self.card.kp, matches)
-            self.offset, frame = self.geometry.drawRect(img, self.card.img, self.card.color, H)
+            frame = self.geometry.drawRect(img, self.card.img, 2, (20, 20, 20), H)
             self.projection, self.translation = self.geometry.calcProjection(H)
 
         if success:
@@ -57,7 +57,7 @@ class Game(ShowBase):
         # Initialise game classes
         self.features = FeatureClass(min_matches=20, max_matches = 75)
         self.geometry = GeometryClass()
-        self.card = Card('card_1', 50, (27, 27, 211), self.features)
+        self.card = Card('card_1', 50, self.features)
 
         ch = cv2.waitKey(1) & 0xFF
         if ch == ord('1'):

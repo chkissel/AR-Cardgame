@@ -12,15 +12,19 @@ from card import Card
 def game(fps, video):
     if (fps):
         start_time = time.time()
-        interval = 3 # displays the frame rate every x second
+        interval = 1 # displays the frame rate every x second
         counter = 0
 
     # Initialize instances
     features = FeatureClass(min_matches = 20, max_matches = 75)
     geometry = GeometryClass()
 
-    card_1 = Card('card_1', 50, (27, 27, 211), features)
-    card_2 = Card('card_2', 25, (211, 27, 27), features)
+    card_1 = Card('card_1', 50, features)
+    card_2 = Card('card_2', 25, features)
+    card_3 = Card('card_6', 25, features)
+    card_4 = Card('card_5', 50, features)
+
+    # cards = [card_1, card_2, card_3, card_4]
     # cards = [card_1, card_2]
     cards = [card_1]
 
@@ -51,9 +55,12 @@ def game(fps, video):
                 if len(matches) > features.MINMATCHES:
                     # Calculate homography matrix
                     H = geometry.computeHomography(kp, card.kp, matches)
-                    frame = geometry.drawRect(frame, card.img, card.color, H)
-                    projection = geometry.calcProjection(H)
-                    frame = render(frame, card.obj, card.scale, card.color, card.img, projection, False)
+                    width, color = geometry.checkRotation(H)
+                    frame = geometry.drawRect(frame, card.img, width, color, H)
+
+                    # Seperate translation only used for Panda3D
+                    projection, transl = geometry.calcProjection(H)
+                    frame = render(frame, card.obj, card.scale, color, card.img, projection)
 
         if (video):
             out.write(frame)
@@ -68,13 +75,14 @@ def game(fps, video):
                 counter = 0
                 start_time = time.time()
 
-    # When everything done, release the capture
+    # Stop the capture
     cap.release()
     if (video):
         out.release()
     cv2.destroyAllWindows()
 
-def render(img, obj, scale, fill, card_img, projection, color=False):
+# credits for rendering https://github.com/juangallostra/augmented-reality
+def render(img, obj, scale, fill, card_img, projection):
     vertices = obj.vertices
     scale_matrix = np.eye(3) * scale
     h, w = card_img.shape
@@ -83,17 +91,14 @@ def render(img, obj, scale, fill, card_img, projection, color=False):
         face_vertices = face[0]
         points = np.array([vertices[vertex - 1] for vertex in face_vertices])
         points = np.dot(points, scale_matrix)
+
         # render model in the middle of the reference surface. To do so,
         # model points must be displaced
         points = np.array([[p[0] + w / 2, p[1] + h / 2, p[2]] for p in points])
         dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
         imgpts = np.int32(dst)
-        if color is False:
-            cv2.fillConvexPoly(img, imgpts, fill)
-        else:
-            color = hex_to_rgb(face[-1])
-            color = color[::-1] # reverse
-            cv2.fillConvexPoly(img, imgpts, color)
+
+        cv2.fillConvexPoly(img, imgpts, fill)
 
     return img
 
