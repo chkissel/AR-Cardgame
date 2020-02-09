@@ -1,5 +1,30 @@
-# https://www.pygame.org/wiki/OBJFileLoader
+import numpy as np
+import cv2
 
+
+class RenderingClass:
+    # credits for rendering https://github.com/juangallostra/augmented-reality
+    def render(self, img, obj, scale, color, card_img, projection):
+        vertices = obj.vertices
+        scale_matrix = np.eye(3) * scale
+        h, w = card_img.shape
+
+        for face in obj.faces:
+            face_vertices = face[0]
+            points = np.array([vertices[vertex - 1] for vertex in face_vertices])
+            points = np.dot(points, scale_matrix)
+
+            # render model in the middle of the reference surface. To do so,
+            # model points must be displaced
+            points = np.array([[p[0] + w / 2, p[1] + h / 2, p[2]] for p in points])
+            dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
+            imgpts = np.int32(dst)
+
+            cv2.fillConvexPoly(img, imgpts, color)
+
+        return img
+
+# credits https://www.pygame.org/wiki/OBJFileLoader
 class OBJ:
     def __init__(self, filename, swapyz=False):
         """Loads a Wavefront OBJ file. """

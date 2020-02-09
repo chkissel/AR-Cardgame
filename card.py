@@ -1,5 +1,5 @@
 import cv2
-from objloader_simple import *
+from renderingClass import OBJ
 
 
 class Card:

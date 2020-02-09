@@ -5,6 +5,7 @@ import time
 
 from featureClass import FeatureClass
 from geometryClass import GeometryClass
+from renderingClass import RenderingClass
 
 from card import Card
 
@@ -18,6 +19,7 @@ def game(fps, video):
     # Initialize instances
     features = FeatureClass(min_matches = 20, max_matches = 75)
     geometry = GeometryClass()
+    rendering = RenderingClass()
 
     card_1 = Card('card_1', 50, features)
     card_2 = Card('card_2', 25, features)
@@ -60,7 +62,7 @@ def game(fps, video):
 
                     # Seperate translation only used for Panda3D
                     projection, transl = geometry.calcProjection(H)
-                    frame = render(frame, card.obj, card.scale, color, card.img, projection)
+                    frame = rendering.render(frame, card.obj, card.scale, color, card.img, projection)
 
         if (video):
             out.write(frame)
@@ -81,26 +83,6 @@ def game(fps, video):
         out.release()
     cv2.destroyAllWindows()
 
-# credits for rendering https://github.com/juangallostra/augmented-reality
-def render(img, obj, scale, fill, card_img, projection):
-    vertices = obj.vertices
-    scale_matrix = np.eye(3) * scale
-    h, w = card_img.shape
-
-    for face in obj.faces:
-        face_vertices = face[0]
-        points = np.array([vertices[vertex - 1] for vertex in face_vertices])
-        points = np.dot(points, scale_matrix)
-
-        # render model in the middle of the reference surface. To do so,
-        # model points must be displaced
-        points = np.array([[p[0] + w / 2, p[1] + h / 2, p[2]] for p in points])
-        dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
-        imgpts = np.int32(dst)
-
-        cv2.fillConvexPoly(img, imgpts, fill)
-
-    return img
 
 if __name__ == "__main__":
     game(fps=True, video=False)
