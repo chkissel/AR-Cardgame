@@ -1,3 +1,5 @@
+# https://www.pygame.org/wiki/OBJFileLoader
+
 class OBJ:
     def __init__(self, filename, swapyz=False):
         """Loads a Wavefront OBJ file. """
