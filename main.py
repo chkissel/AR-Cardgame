@@ -23,6 +23,7 @@ def game(fps, video):
     card_2 = Card('card_2', 25, features)
     card_3 = Card('card_6', 25, features)
     card_4 = Card('card_5', 50, features)
+    
     # cards = [card_1, card_2, card_3, card_4]
     # cards = [card_1, card_2]
     cards = [card_1]
@@ -55,10 +56,10 @@ def game(fps, video):
                     # Calculate homography matrix
                     H = geometry.computeHomography(kp, card.kp, matches)
                     width, color = geometry.checkRotation(H)
-                    offset, frame = geometry.drawRect(frame, card.img, width, color, H)
+                    frame = geometry.drawRect(frame, card.img, width, color, H)
 
                     projection = geometry.calcProjection(H)
-                    frame = render(frame, card.obj, card.scale, color, card.img, projection, False)
+                    frame = render(frame, card.obj, card.scale, color, card.img, projection)
 
         if (video):
             out.write(frame)
@@ -73,13 +74,14 @@ def game(fps, video):
                 counter = 0
                 start_time = time.time()
 
-    # When everything done, release the capture
+    # Stop the capture
     cap.release()
     if (video):
         out.release()
     cv2.destroyAllWindows()
 
-def render(img, obj, scale, fill, card_img, projection, color=False):
+# credits for rendering https://github.com/juangallostra/augmented-reality
+def render(img, obj, scale, fill, card_img, projection):
     vertices = obj.vertices
     scale_matrix = np.eye(3) * scale
     h, w = card_img.shape
@@ -88,17 +90,14 @@ def render(img, obj, scale, fill, card_img, projection, color=False):
         face_vertices = face[0]
         points = np.array([vertices[vertex - 1] for vertex in face_vertices])
         points = np.dot(points, scale_matrix)
+
         # render model in the middle of the reference surface. To do so,
         # model points must be displaced
         points = np.array([[p[0] + w / 2, p[1] + h / 2, p[2]] for p in points])
         dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
         imgpts = np.int32(dst)
-        if color is False:
-            cv2.fillConvexPoly(img, imgpts, fill)
-        else:
-            color = hex_to_rgb(face[-1])
-            color = color[::-1] # reverse
-            cv2.fillConvexPoly(img, imgpts, color)
+
+        cv2.fillConvexPoly(img, imgpts, fill)
 
     return img
 

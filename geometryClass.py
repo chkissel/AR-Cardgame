@@ -40,21 +40,18 @@ class GeometryClass:
     def drawRect(self, img, card_img, width, color, homography):
         # Build edge points out of card image
         h, w = card_img.shape
-        pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
+        p1 = [0, 0]
+        p2 = [0, h - 1]
+        p3 = [w - 1, h - 1]
+        p4 = [w - 1, 0]
+        points = np.float32([[p1], [p2], [p3], [p4]])
 
-        # Transform points and build frame out of edges
-        dst = cv2.perspectiveTransform(pts, homography)
+        # Transform points and build frame out of transformed points
+        tpoints = cv2.perspectiveTransform(points, homography)
 
-        offset = self.calcCenter(dst)
-        drawn = cv2.polylines(img, [np.int32(dst)], True, color, width, cv2.LINE_AA)
+        drawn = cv2.polylines(img, [np.int32(tpoints)], True, color, width, cv2.LINE_AA)
 
-        return offset, drawn
-
-    def calcCenter(self, arr):
-        dist_long = math.sqrt((arr[0,0,0] - arr[1,0,0])**2 + (arr[0,0,1] - arr[1,0,1])**2)
-        dist_short = math.sqrt((arr[1,0,0] - arr[2,0,0])**2 + (arr[1,0,1] - arr[2,0,1])**2)
-
-        return [dist_long, dist_short]
+        return drawn
 
     def checkRotation(self, homography):
         p1_color = (211, 27, 27)
@@ -77,7 +74,7 @@ class GeometryClass:
         return width, color
 
     def calcProjection(self, homography):
-        # Compute rotation along the x and y axis as well as the translation
+        # Clear homography from camera distortion
         homography = homography * (-1)
         cleared_matrix = np.dot(np.linalg.inv(self.camera_params), homography)
         col_1 = cleared_matrix[:, 0] # rot1
@@ -90,7 +87,8 @@ class GeometryClass:
         rot_2 = col_2 / l
         translation = col_3 / l
 
-        # This mess turns the model to the left / right based on card direction
+        # Turns the model to the left / right based on card direction
+        # while giving the expected result, an offset to the center occurs
         # theta = np.radians(90)
         # row_1 = [np.cos(theta), -np.sin(theta), 0]
         # row_2 = [np.sin(theta), np.cos(theta), 0]
@@ -103,7 +101,7 @@ class GeometryClass:
         # rot_1 = rotations[:, 0]
         # rot_2 = rotations[:, 1]
 
-        # compute the orthonormal basis
+        # Compute the orthonormal basis
         c = rot_1 + rot_2
         p = np.cross(rot_1, rot_2)
         d = np.cross(c, p)
@@ -121,17 +119,12 @@ class GeometryClass:
         # row_2 = [np.sin(theta), np.cos(theta), 0]
         # row_3 = [0, 0, 1]
         # rot_z = np.matrix([row_1, row_2, row_3])
-        #
-        # projection = rot_z * projection
-        # print(self.rotationMatrixToEulerAngles(projection))
-        # the rotation around z axis works as intended
+        # projection = projection * rot_z
 
         # Add translation as last column
         projection = np.c_[ projection, translation]
 
-        # return np.dot(self.camera_params, projection)
-        # return np.dot(self.camera_params, projection), translation
-        return projection, translation
+        return np.dot(self.camera_params, projection)
 
 
     # credits: https://www.learnopencv.com/rotation-matrix-to-euler-angles/
