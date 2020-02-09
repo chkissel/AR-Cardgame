@@ -132,11 +132,13 @@ class Game(ShowBase):
         # self.model.setScale(5.0, 5.0, 5.0)
         self.model = Actor("models/panda-model",
                            {"walk": "models/panda-walk4"})
+
         # Scale and flip model on Y
         self.model.setScale(0.03, -0.03, 0.03)
         self.model.setAttrib(CullFaceAttrib.makeReverse())
         # Reparent the model to render.
         self.model.reparentTo(self.render)
+        self.model.loop("walk")
         # Apply scale and position transforms on the model.
         #self.model.setScale(0.025, 0.025, 0.025)
 
