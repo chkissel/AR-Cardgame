@@ -124,17 +124,7 @@ if (h_degree > 45 and h_degree < 135) or (h_degree < -45 and h_degree > -135):
 width = 3 if active else 1
 ```
 
-Zur Augmentierung des 3D-Modells wird aus Homographiematrix(H) eine Projektionsmatrix (P), die der Kameraposition entspricht, errechnet. Diese setzt sich zusammen aus:
-
-**P = K [ R | t ]**
-
-Wobei **K** die intrinsischen Kameraparameter sind, **t** die Translation darstellt und in **R** die Rotationen enthalten sind. Die Ableitung aus **H** ist möglich, da beide Matrizen die gleichen Informationen enthalten. So sind die ersten beiden Spalten von **H** identisch mit den jeweiligen Spalten in **R** und die dritte Spalte von **H** entspricht **t**. Die dritte Spalte von **R**, die Tiefe, kann nun mit dem Wissen, dass die Achsen orthogonal aufeinander stehen, aus dem Kreuzprodukt von Spalte eins und zwei berechnet werden. 
-
-**R [ 3:] = R [ :1, ] ⊗ R [ 1:2, ]**
-
-Somit ist die Projektionsmatrix komplett und kann zur perspektivischen Transformation der AR-Inhalte angewandt werden.
-
-Um den den Duell-Effekt des Kartenspieles zu verstärken sollen hierbei alle Figuren entsprechend ihrer Spielerzugehörigkeit zum Gegenspieler gedreht sein. Dazu wird nach auslesen der Homograhie, diese mit einer Rotationsmatrix verrechnet. Es wird zwar der gewünschte Effekt erzielt, allerdings entsteht hier abhängig von der Rotation der Karte ein Offset zum Kartenmittelpunkt. Ein Herausrechnen der Verschiebung war uns nicht möglich.
+Neben der graphischen Darstellung dieser Informationen in dem Rechteck der Homographie werden die Informationen in einer Texteinblendung am oberen Bildschirmrand angegeben. Hier wird die Anzahl der Karten pro Spieler angezeigt und wie viele von diesen sich in einem aktiven Zustand befinden.
 
 ```python
 def writeInformation(self, img, status):
@@ -143,7 +133,15 @@ def writeInformation(self, img, status):
       return drawn
 ```
 
-Zur Augmentierung des 3D-Modells wird aus der Homographiematrix eine Projektionsmatrix errechnet. Diese wird dann wiederum verwendet um ein 3D Objekt darzustellen. In einer frühen Phase des Programmes wurde dafür ein .obj Modell anhand der gegebenen Faces und Vertices ohne Beleuchtung direkt in OpenCV gezeichnet. Diverse Anpassungen der Projektionsmatrix im Nachhinein stellten sich als besonders knifflig dar, siehe Kapitel Rendering. Auch in OpenCV erzeugten beispielsweise nachträgliche Rotationen Verschiebungen, welche wegen der geplanten Überführung in ein Rendering Framework nicht weiter verfolgt wurden.
+Zur Augmentierung des 3D-Modells wird aus Homographiematrix(H) eine Projektionsmatrix (P), die der Kameraposition entspricht, errechnet. Diese setzt sich zusammen aus:
+
+**P = K [ R | t ]**
+
+Wobei **K** die intrinsischen Kameraparameter sind, **t** die Translation darstellt und in **R** die Rotationen enthalten sind. Die Ableitung aus **H** ist möglich, da beide Matrizen die gleichen Informationen enthalten. So sind die ersten beiden Spalten von **H** identisch mit den jeweiligen Spalten in **R** und die dritte Spalte von **H** entspricht **t**. Die dritte Spalte von **R**, die Tiefe, kann nun mit dem Wissen, dass die Achsen orthogonal aufeinander stehen, aus dem Kreuzprodukt von Spalte eins und zwei berechnet werden. 
+
+**R [ 3:] = R [ :1, ] ⊗ R [ 1:2, ]**
+
+Somit ist die Projektionsmatrix komplett und wird wiederum verwendet, um ein 3D Objekt darzustellen. In einer frühen Phase des Programmes wurde dafür ein .obj Modell anhand der gegebenen Faces und Vertices ohne Beleuchtung direkt in OpenCV gezeichnet. Diverse Anpassungen der Projektionsmatrix im Nachhinein stellten sich als besonders knifflig dar, siehe Kapitel Rendering. Auch in OpenCV erzeugten beispielsweise nachträgliche Rotationen Verschiebungen, welche wegen der geplanten Überführung in ein Rendering Framework nicht weiter verfolgt wurden.
 
 ```python
 # projection is the projection matrix without additional rotation
