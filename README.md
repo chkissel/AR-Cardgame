@@ -97,11 +97,17 @@ SIFT bietet in jedem Fall exzellente Ergebnisse. Die Erkennung ist extrem stabil
 
 ![alt text](./assets/gifs/SIFT_1_card_bf_knnmatch.gif)
 
-Abschließend lässt sich hier festhalten, das keiner der Algorithmen alle Ansprüche erfüllen konnte. Das liegt natürlich auch daran, dass die Karten als Ersatz für AR Marker wenig geeignet sind. Die Karten weisen abseits des Bildes viele Überschneidungen in Text und Symbolik auf. Hier ist es vor allem für ORB schwierig zwischen den Karten zu unterscheiden. Wird lediglich das Bild der Karte verwendet findet ORB wiederum nicht genug Features um die Karte zu erkennen. SIFT bietet eine sehr sichere Erkennung auf Kosten der Performance. Möglicherweise lässt sich die Erkennung mit SIFT soweit optimieren als das die gefundenen Punkte nicht neu gematcht sondern im Bild verfolgt werden.
+Abschließend lässt sich hier festhalten, dass keiner der Algorithmen alle Ansprüche erfüllen konnte. Das liegt natürlich auch daran, dass die Karten als Ersatz für AR Marker wenig geeignet sind. Die Karten weisen abseits des Bildes viele Überschneidungen in Text und Symbolik auf. Hier ist es vor allem für ORB schwierig zwischen den Karten zu unterscheiden. Wird lediglich das Bild der Karte verwendet findet ORB wiederum nicht genug Features um die Karte zu erkennen. SIFT bietet eine sehr sichere Erkennung auf Kosten der Performance. Möglicherweise lässt sich die Erkennung mit SIFT soweit optimieren, dass die gefundenen Punkte nicht neu gematcht sondern im Bild verfolgt werden.
 
 #### Homographie & Transformation
 
-Aus den gefundenen Matches im Bild wird die Homographie ermittelt. Mithilfe Dieser können wir die Position und Lage der Karte bestimmen. In dem Szenario welches wir betrachten spielen zwei Spieler gegeneinander. Jedem Spieler ist eine Seite zugeteilt, ihre Karten zeigen damit mit ihrer Kopf-Seite Richtung Gegenspieler. Die Kamera filmt von oben auf das Szenario. Durch die statische Kamera welche von oben auf die Ebene zeigt lassen sich Informationen bereits aus der Homographie Matrix extrahieren da man sich hier sozusagen in einem 2D Szenario befindet. Dabei wird die Rotation um X betrachtet. Der Winkel wird ermittelt und ausgewertet. Alle Karten die einen negativen Winkel aufweisen gehören so zu einem Spieler, alle mit einem positiven Rotationswinkel zum Gegenspieler. Dies geht von der Annahme aus das die Karten gegeneinander gelegt werden, also 90° beziehungsweise -90° rotiert. Ob eine Karte getappt, also eingedreht, und damit als deaktiviert gilt, wird ebenfalls am Rotationswinkel um X abgelesen. Hierzu muss die Karte mindestens um 45° beziehungsweise -45° eingedreht sein.
+Aus den gefundenen Matches im Bild wird die Homographie ermittelt. Mithilfe Dieser können wir die Position und Lage der Karte bestimmen. 
+
+![alt text](./assets/images/homography.png)
+
+*https://forums.fast.ai/t/how-to-transform-4-points-parameter-matrix-to-homography-matrix/5770*
+
+In dem Szenario welches wir betrachten spielen zwei Spieler gegeneinander. Jedem Spieler ist eine Seite zugeteilt, ihre Karten zeigen damit mit ihrer Kopf-Seite Richtung Gegenspieler. Die Kamera filmt von oben auf das Szenario. Durch die statische Kamera welche von oben auf die Ebene zeigt lassen sich Informationen bereits aus der 3*3 Homographiematrix extrahieren da man sich hier sozusagen in einem 2D Szenario befindet. Dabei wird die Rotation um X betrachtet. Der Winkel wird ermittelt und ausgewertet. Alle Karten die einen negativen Winkel aufweisen gehören so zu einem Spieler, alle mit einem positiven Rotationswinkel zum Gegenspieler. Dies geht von der Annahme aus das die Karten gegeneinander gelegt werden, also 90° beziehungsweise -90° rotiert. Ob eine Karte getappt, also eingedreht, und damit als deaktiviert gilt, wird ebenfalls am Rotationswinkel um X abgelesen. Hierzu muss die Karte mindestens um 45° beziehungsweise -45° eingedreht sein.
 
 ```python
 # Check if card belongs to left or right player
@@ -118,7 +124,17 @@ if (h_degree > 45 and h_degree < 135) or (h_degree < -45 and h_degree > -135):
 width = 3 if active else 1
 ```
 
-Zur Augmentierung des 3D-Modells wird aus der Homographiematrix eine Projektionsmatrix errechnet. Um den den Duell-Effekt des Kartenspieles zu verstärken sollen hierbei alle Figuren entsprechend ihrer Spielerzugehörigkeit zum Gegenspieler gedreht sein. Dazu wird nach auslesen der Homograhie, diese mit einer Rotationsmatrix verrechnet. Es wird zwar der gewünschte Effekt erzielt, allerdings entsteht hier abhängig von der Rotation der Karte ein Offset zum Kartenmittelpunkt. Ein Herausrechnen der Verschiebung war uns nicht möglich.
+Zur Augmentierung des 3D-Modells wird aus Homographiematrix(H) eine Projektionsmatrix (P), die der Kameraposition entspricht, errechnet. Diese setzt sich zusammen aus:
+
+**P = K [ R | t ]**
+
+Wobei **K** die intrinsischen Kameraparameter sind, **t** die Translation darstellt und in **R** die Rotationen enthalten sind. Die Ableitung aus **H** ist möglich, da beide Matrizen die gleichen Informationen enthalten. So sind die ersten beiden Spalten von **H** identisch mit den jeweiligen Spalten in **R** und die dritte Spalte von **H** entspricht **t**. Die dritte Spalte von **R**, die Tiefe, kann nun mit dem Wissen, dass die Achsen orthogonal aufeinander stehen, aus dem Kreuzprodukt von Spalte eins und zwei berechnet werden. 
+
+**R [ 3:] = R [ :1, ] ⊗ R [ 1:2, ]**
+
+Somit ist die Projektionsmatrix komplett und kann zur perspektivischen Transformation der AR-Inhalte angewandt werden.
+
+Um den den Duell-Effekt des Kartenspieles zu verstärken sollen hierbei alle Figuren entsprechend ihrer Spielerzugehörigkeit zum Gegenspieler gedreht sein. Dazu wird nach auslesen der Homograhie, diese mit einer Rotationsmatrix verrechnet. Es wird zwar der gewünschte Effekt erzielt, allerdings entsteht hier abhängig von der Rotation der Karte ein Offset zum Kartenmittelpunkt. Ein Herausrechnen der Verschiebung war uns nicht möglich.
 
 ```python
 # rot_1 and rot_2 are normalized rotations from homography matrix
