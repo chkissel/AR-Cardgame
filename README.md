@@ -139,6 +139,9 @@ rot_2 = rotations[:, 1]
 ...
 ```
 
+![alt text](./assets/gifs/SIFT_full_demo.gif)
+
+
 ### Rendering
 
 Nachdem die Funktionalität des AR-Tracking stand, sollte noch das Rendering der 3D-Modelle verbessert werden. So bietet nur OpenCV alleine nicht die Möglichkeit die Objekte mit Texturen zu versehen oder sie zu beleuchten. Daher wurden drei Frameworks zum Rendering in Python ausprobiert: PyGame, PyOpenGL und Panda3D.
