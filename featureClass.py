@@ -48,7 +48,7 @@ class FeatureClass:
         # matches = self.flann.knnMatch(img_des, card_des, k=2)
         good = []
         for m,n in matches:
-            if m.distance < 0.75*n.distance: # 0.8 for ORB
+            if m.distance < 0.65*n.distance: # 0.8 for ORB
                 good.append(m)
 
         return good

@@ -43,12 +43,12 @@ pip install opencv-python numpy Panda3D
 ```
 
 Das Programm wird über die Konsole ausgeführt:
-```bash 
-python main.py 
+```bash
+python main.py
 ```
 Ebenso die Render-Demo:
-```bash 
-python pandaMain.py 
+```bash
+python pandaMain.py
 ```
 
 ### Programm
@@ -76,14 +76,14 @@ Bildfeatures können mit verschiedenen Algorithmen bestimmt werden. Für dieses 
 | 1       | SIFT (nfeatures 200)            | 9.5 FPS     | (5) EXCELLENT   |
 | 1       | SIFT + Flann knn-Matching       | 9 FPS       | (5) EXCELLENT   |
 | 1       | SURF + BF knn-Matching          | 12 FPS      | (3) MEDIOCRE    |
-| ------- |:-------------------------------:|:-----------:|:---------------:|
+| ------- |---------------------------------|-------------|-----------------|
 | 2       | ORB + BF Matching/knn-Matching  | 20 FPS      | (1) NOT WORKING
 | 2       | SIFT +  BF knn-Matching         | 5.5 FPS     | (5) EXCELLENT   |
 | 2       | SIFT +  Flann knn-Matching      | 5 FPS       | (5) EXCELLENT   |
 | 2       | SIFT (nfeatures 200)            | 8 FPS       | (5) EXCELLENT   |
 | 2       | SURF + Flann knn-Matching       | 8 FPS       | (3) MEDIOCRE    |
 | 2       | SURF + BF knn-Matching          | 8 FPS       | (3) MEDIOCRE    |
-| ------- |:-------------------------------:|:-----------:|:---------------:|
+| ------- |---------------------------------|-------------|-----------------|
 | 4       | SIFT (nfeatures 200)            | 8 FPS       | (1) NOT WORKING |
 | 4       | SIFT + BF knn-Matching          | 3 FPS       | (5) EXCELLENT   |
 
@@ -137,23 +137,29 @@ Somit ist die Projektionsmatrix komplett und kann zur perspektivischen Transform
 Um den den Duell-Effekt des Kartenspieles zu verstärken sollen hierbei alle Figuren entsprechend ihrer Spielerzugehörigkeit zum Gegenspieler gedreht sein. Dazu wird nach auslesen der Homograhie, diese mit einer Rotationsmatrix verrechnet. Es wird zwar der gewünschte Effekt erzielt, allerdings entsteht hier abhängig von der Rotation der Karte ein Offset zum Kartenmittelpunkt. Ein Herausrechnen der Verschiebung war uns nicht möglich.
 
 ```python
-# rot_1 and rot_2 are normalized rotations from homography matrix
+def writeInformation(self, img, status):
+      text = 'Player 1: ' + str(status[0]) + ' cards, ' + str(status[1]) + ' active | ' + 'Player 2: ' + str(status[2]) + ' cards, ' + str(status[3]) + ' active'
+      drawn = cv2.putText(img, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 125, 0))
+      return drawn
+```
+
+Zur Augmentierung des 3D-Modells wird aus der Homographiematrix eine Projektionsmatrix errechnet. Diese wird dann wiederum verwendet um ein 3D Objekt darzustellen. In einer frühen Phase des Programmes wurde dafür ein .obj Modell anhand der gegebenen Faces und Vertices ohne Beleuchtung direkt in OpenCV gezeichnet. Diverse Anpassungen der Projektionsmatrix im Nachhinein stellten sich als besonders knifflig dar, siehe Kapitel Rendering. Auch in OpenCV erzeugten beispielsweise nachträgliche Rotationen Verschiebungen, welche wegen der geplanten Überführung in ein Rendering Framework nicht weiter verfolgt wurden.
+
+```python
+# projection is the projection matrix without additional rotation
 ...
-# Turns the model to the left / right based on card direction
-# while giving the expected result, an offset to the center occurs
+# Turns the card around the given degree
+# however the model now has a noticable offset to the center
 theta = np.radians(90)
 row_1 = [np.cos(theta), -np.sin(theta), 0]
 row_2 = [np.sin(theta), np.cos(theta), 0]
 row_3 = [0, 0, 1]
-rot_mat = np.array([row_1, row_2, row_3])
-
-rotations = np.array([rot_1, rot_2, [0, 0, 1]]).T
-rotations = rot_mat * rotations
-
-rot_1 = rotations[:, 0]
-rot_2 = rotations[:, 1]
+rot_z = np.matrix([row_1, row_2, row_3])
+projection = projection * rot_z
 ...
 ```
+
+Die finale Anwendung, ohne Texteinbledungen, zeigt in etwa das folgende Bild.
 
 ![alt text](./assets/gifs/SIFT_full_demo.gif)
 
