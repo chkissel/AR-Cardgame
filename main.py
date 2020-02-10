@@ -27,8 +27,12 @@ def game(fps, video):
     card_4 = Card('card_5', 50, features)
 
     # cards = [card_1, card_2, card_3, card_4]
+    cards = [card_1, card_2, card_4]
     # cards = [card_1, card_2]
-    cards = [card_1]
+    # cards = [card_1]
+
+    # [blueCards, blueActive, redCards, redActive]
+    card_stati = [0, 0, 0, 0]
 
     cap = cv2.VideoCapture(0)
     if (video):
@@ -58,11 +62,15 @@ def game(fps, video):
                     # Calculate homography matrix
                     H = geometry.computeHomography(kp, card.kp, matches)
                     width, color = geometry.checkRotation(H)
+                    card_stati = collectInformation(card_stati, width, color)
                     frame = geometry.drawRect(frame, card.img, width, color, H)
 
                     # Seperate translation only used for Panda3D
                     projection, transl = geometry.calcProjection(H)
                     frame = rendering.render(frame, card.obj, card.scale, color, card.img, projection)
+
+            frame = geometry.writeInformation(frame, card_stati)
+            card_stati = [0, 0, 0, 0]
 
         if (video):
             out.write(frame)
@@ -82,6 +90,23 @@ def game(fps, video):
     if (video):
         out.release()
     cv2.destroyAllWindows()
+
+def collectInformation(stati, width, color):
+    p1_color = (211, 27, 27)
+    active_width = 3
+
+    if color == p1_color:
+        stati[0] = stati[0] + 1
+        if width == active_width:
+            stati[1] = stati[1] + 1
+    else:
+        stati[2] = stati[2] + 1
+        if width == active_width:
+            stati[3] = stati[3] + 1
+
+    return stati
+
+
 
 
 if __name__ == "__main__":

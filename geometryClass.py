@@ -72,6 +72,11 @@ class GeometryClass:
 
         return width, color
 
+    def writeInformation(self, img, status):
+        text = 'Player 1: ' + str(status[0]) + ' cards, ' + str(status[1]) + ' active | ' + 'Player 2: ' + str(status[2]) + ' cards, ' + str(status[3]) + ' active'
+        drawn = cv2.putText(img, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 125, 0))
+        return drawn
+
     def calcProjection(self, homography):
         # Clear homography from camera distortion
         homography = homography * (-1)
