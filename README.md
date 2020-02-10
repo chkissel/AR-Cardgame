@@ -42,6 +42,15 @@ pip install opencv-python numpy Panda3D
 
 ```
 
+Das Programm wird über die Konsole ausgeführt:
+```bash 
+python main.py 
+```
+Ebenso die Render-Demo:
+```bash 
+python pandaMain.py 
+```
+
 ### Programm
 #### Funktionaler Ablauf
 
