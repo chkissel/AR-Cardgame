@@ -1,14 +1,14 @@
 # AR-Cardgame
 
-- Projektbeschreibung
-- Requirements
-    - Versionen
-    - Installation
-- Programm
-    - Funktionaler Ablauf
-    - Feature Deskriptoren & Matching
-    - Homographie & Transformation
-- Rendering
+- [Projektbeschreibung](#Projektbeschreibung)
+- [Requirements](#Requirements)
+    - [Versionen](#Versionen)
+    - [Installation](#Installation)
+- [Programm](#Programm)
+    - [Funktionaler Ablauf](#Funktionaler-Ablauf)
+    - [Feature Deskriptoren & Matching](#Feature-Deskriptoren-&-Matching)
+    - [Homographie & Transformation](#Homographie-&-Transformation)
+- [Rendering](#Rendering)
 
 
 ### Projektbeschreibung
@@ -16,7 +16,6 @@
 Das Projekt 'AR-Cardgame' erweitert das beliebte 'Trading Card'-Spielprinzip um eine neue Erlebnisebene. Mit Hilfe von Augmented Reality(AR)-Techniken werden Figuren auf den Spielkarten eingeblendet. Außerdem wird die Lage der Karte, und somit ihr Zustand, automatisch erkannt. So befinden sich Karten, die parallel zum Gegner ausgerichtet liegen, in einer Art Verteidigungsposition.
 Das zu diesem Zweck geschriebene Python-Programm bedient sich verschiedener Frameworks und Bibliotheken. Diese sowie der generelle Programmaufbau werden im Folgenden beschrieben. Weiterhin wird evaluiert welche Faktoren einen Einfluss auf die Performance und Stabilität des Programms nehmen. Zum Schluss werden noch einige Technologien zum Rendering der AR-Inhalte vorgestellt.
 
-![alt text](./assets/gifs/ORB_1_card.gif)
 
 ### Requirements
 #### Versionen
@@ -43,10 +42,19 @@ pip install opencv-python numpy Panda3D
 
 ```
 
+Das Programm wird über die Konsole ausgeführt:
+```bash
+python main.py
+```
+Ebenso die Render-Demo:
+```bash
+python pandaMain.py
+```
+
 ### Programm
 #### Funktionaler Ablauf
 
-Das Programm startet mit einer Initialisierungsphase in der die verschiedenen verwendeten Klassen geladen werden. Zudem werden benötigte Spielkarten geladen, das Modell sowie Bild geladen und deren Features extrahiert. Karten die während der Laufzeit erkannt werden sollen werden in eine Liste geschrieben durch die im Loop des Programmes iteriert wird.
+Das Programm startet mit einer Initialisierungsphase in der die verschiedenen verwendeten Klassen geladen werden. Zudem werden benötigte Spielkarten, das Modell sowie Bild geladen und deren Features extrahiert. Karten die während der Laufzeit erkannt werden sollen in eine Liste geschrieben werden, durch die im Loop des Programmes iteriert wird.
 Im Loop wird das aktuelle Kamerabild ausgelesen und Features daraus extrahiert. Anschließend werden für jede Karte in der Kartenliste folgende Aktionen durchgeführt.
 
 - Kartenfeatures mit Bildfeatures matchen
@@ -68,26 +76,26 @@ Bildfeatures können mit verschiedenen Algorithmen bestimmt werden. Für dieses 
 | 1       | SIFT (nfeatures 200)            | 9.5 FPS     | (5) EXCELLENT   |
 | 1       | SIFT + Flann knn-Matching       | 9 FPS       | (5) EXCELLENT   |
 | 1       | SURF + BF knn-Matching          | 12 FPS      | (3) MEDIOCRE    |
-| ------- |:-------------------------------:|:-----------:|:---------------:|
+| ------- |---------------------------------|-------------|-----------------|
 | 2       | ORB + BF Matching/knn-Matching  | 20 FPS      | (1) NOT WORKING
 | 2       | SIFT +  BF knn-Matching         | 5.5 FPS     | (5) EXCELLENT   |
 | 2       | SIFT +  Flann knn-Matching      | 5 FPS       | (5) EXCELLENT   |
 | 2       | SIFT (nfeatures 200)            | 8 FPS       | (5) EXCELLENT   |
 | 2       | SURF + Flann knn-Matching       | 8 FPS       | (3) MEDIOCRE    |
 | 2       | SURF + BF knn-Matching          | 8 FPS       | (3) MEDIOCRE    |
-| ------- |:-------------------------------:|:-----------:|:---------------:|
+| ------- |---------------------------------|-------------|-----------------|
 | 4       | SIFT (nfeatures 200)            | 8 FPS       | (1) NOT WORKING |
 | 4       | SIFT + BF knn-Matching          | 3 FPS       | (5) EXCELLENT   |
 
 Hier lassen sich mehrere Erkenntnisse für unsere Anwendung extrahieren. Der verwendete Matching-Algorithmus hat wenig bis keine Auswirkungen auf Performance oder Qualität.
-SURF ist schneller als SIFT und erzeugt qualitativ bessere Ergebnisse als ORB, allerdings ist der Algorithmus trotzdem insgesamt sehr langsam ohne die Ergebnisse soweit zu verbessern das die längere Berechnungszeit gerechtfertigt ist.
+SURF ist schneller als SIFT und erzeugt qualitativ bessere Ergebnisse als ORB, allerdings ist der Algorithmus trotzdem insgesamt sehr langsam ohne die Ergebnisse soweit zu verbessern, dass die längere Berechnungszeit gerechtfertigt wäre.
 ORB bietet mit Abstand die beste Performance. Die Ergebnisse sind allerdings sehr instabil und zeigen starkes Flackern. Dieser Effekt wurde durch ein Smoothing über die Zeit versucht auszugleichen, damit wurde das Bild minimal ruhiger. Zudem kann ORB bereits bei zwei Karten gleichzeitig nicht mehr angewendet werden. Die zusätzliche Karte wird nur in seltenen Fällen erkannt und lässt sich aufgrund von Überschneidungen zur ersten Karte nicht identifizieren.
 
-VIDEO ORB
+![alt text](./assets/gifs/ORB_1_card_small.gif)
 
 SIFT bietet in jedem Fall exzellente Ergebnisse. Die Erkennung ist extrem stabil und verlässlich. Dies kommt bringt Abzüge in der Performance. Bereits bei einer einzigen Karte ist das Resultat mit knapp 10 Frames die Sekunde nur noch bedingt geeignet. Besonders bei mehreren Karten leidet die Performance enorm. Diesem Effekt wurde durch eine Reduktion der extrahierten Features entgegen gewirkt, allerdings finden sich dadurch bei mehreren Karten nicht mehr genug Features um jede Karte zu identifizieren.
 
-VIDEO SIFT
+![alt text](./assets/gifs/SIFT_1_card_bf_knnmatch.gif)
 
 Abschließend lässt sich hier festhalten, das keiner der Algorithmen alle Ansprüche erfüllen konnte. Das liegt natürlich auch daran, dass die Karten als Ersatz für AR Marker wenig geeignet sind. Die Karten weisen abseits des Bildes viele Überschneidungen in Text und Symbolik auf. Hier ist es vor allem für ORB schwierig zwischen den Karten zu unterscheiden. Wird lediglich das Bild der Karte verwendet findet ORB wiederum nicht genug Features um die Karte zu erkennen. SIFT bietet eine sehr sichere Erkennung auf Kosten der Performance. Möglicherweise lässt sich die Erkennung mit SIFT soweit optimieren als das die gefundenen Punkte nicht neu gematcht sondern im Bild verfolgt werden.
 
@@ -110,32 +118,43 @@ if (h_degree > 45 and h_degree < 135) or (h_degree < -45 and h_degree > -135):
 width = 3 if active else 1
 ```
 
-Zur Augmentierung des 3D-Modells wird aus der Homographiematrix eine Projektionsmatrix errechnet. Um den den Duell-Effekt des Kartenspieles zu verstärken sollen hierbei alle Figuren entsprechend ihrer Spielerzugehörigkeit zum Gegenspieler gedreht sein. Dazu wird nach auslesen der Homograhie, diese mit einer Rotationsmatrix verrechnet. Es wird zwar der gewünschte Effekt erzielt, allerdings entsteht hier abhängig von der Rotation der Karte ein Offset zum Kartenmittelpunkt. Ein Herausrechnen der Verschiebung war uns nicht möglich.
+Neben der graphischen Darstellung dieser Informationen in dem Rechteck der Homographie werden die Informationen in einer Texteinblendung am oberen Bildschirmrand angegeben. Hier wird die Anzahl der Karten pro Spieler angezeigt und wie viele von diesen sich in einem aktiven Zustand befinden.
 
 ```python
-# rot_1 and rot_2 are normalized rotations from homography matrix
+def writeInformation(self, img, status):
+      text = 'Player 1: ' + str(status[0]) + ' cards, ' + str(status[1]) + ' active | ' + 'Player 2: ' + str(status[2]) + ' cards, ' + str(status[3]) + ' active'
+      drawn = cv2.putText(img, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 125, 0))
+      return drawn
+```
+
+Zur Augmentierung des 3D-Modells wird aus der Homographiematrix eine Projektionsmatrix errechnet. Diese wird dann wiederum verwendet um ein 3D Objekt darzustellen. In einer frühen Phase des Programmes wurde dafür ein .obj Modell anhand der gegebenen Faces und Vertices ohne Beleuchtung direkt in OpenCV gezeichnet. Diverse Anpassungen der Projektionsmatrix im Nachhinein stellten sich als besonders knifflig dar, siehe Kapitel Rendering. Auch in OpenCV erzeugten beispielsweise nachträgliche Rotationen Verschiebungen, welche wegen der geplanten Überführung in ein Rendering Framework nicht weiter verfolgt wurden.
+
+```python
+# projection is the projection matrix without additional rotation
 ...
-# Turns the model to the left / right based on card direction
-# while giving the expected result, an offset to the center occurs
+# Turns the card around the given degree
+# however the model now has a noticable offset to the center
 theta = np.radians(90)
 row_1 = [np.cos(theta), -np.sin(theta), 0]
 row_2 = [np.sin(theta), np.cos(theta), 0]
 row_3 = [0, 0, 1]
-rot_mat = np.array([row_1, row_2, row_3])
-
-rotations = np.array([rot_1, rot_2, [0, 0, 1]]).T
-rotations = rot_mat * rotations
-
-rot_1 = rotations[:, 0]
-rot_2 = rotations[:, 1]
+rot_z = np.matrix([row_1, row_2, row_3])
+projection = projection * rot_z
 ...
 ```
+
+Die finale Anwendung, ohne Texteinbledungen, zeigt in etwa das folgende Bild.
+
+![alt text](./assets/gifs/SIFT_full_demo.gif)
+
 
 ### Rendering
 
 Nachdem die Funktionalität des AR-Tracking stand, sollte noch das Rendering der 3D-Modelle verbessert werden. So bietet nur OpenCV alleine nicht die Möglichkeit die Objekte mit Texturen zu versehen oder sie zu beleuchten. Daher wurden drei Frameworks zum Rendering in Python ausprobiert: PyGame, PyOpenGL und Panda3D.
 Alle drei Programmbibliothek enthalten Module zum Abspielen und Steuern von Grafikelementen. Ein weiteres Kriterium war die einfache Integrierung der OpenCV-Funktionen in die Render-Pipeline. Alle drei Kandidaten erfüllten diese Voraussetzung, allerdings gestaltete sich die Übersetzung der Zahlenräume und Koordinatensystem in die jeweilige Umgebung als äußerst schwierig. Deshalb wird in diesem Kapitel eine nur halbfunktionale Implementierung vorgestellt.
 Der Prototyp wurde letztendlich in Panda3D umgesetzt. Die Entscheidung für Panda3D fiel insbesondere auf Grund der großen Community und guten Dokumentation, die das Arbeiten mit dem Framework extrem erleichtern.
+
+![alt text](./assets/gifs/panda_final.gif)
 
 Ein Panda3D-Programm geht immer von einer Klasse aus, die das ShowBase-Objekt erbt. In der __init__()-Funktion der Klasse befindet sich der 'Scene Graph'. In diesem werden alle Objekte definiert die während der Laufzeit gerendert werden sollen.
 

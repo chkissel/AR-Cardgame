@@ -92,6 +92,7 @@ class GeometryClass:
         translation = col_3 / l
 
         # Turns the model to the left / right based on card direction
+        # works only in 2D and does not support rotations in other directions
         # while giving the expected result, an offset to the center occurs
         # theta = np.radians(90)
         # row_1 = [np.cos(theta), -np.sin(theta), 0]
