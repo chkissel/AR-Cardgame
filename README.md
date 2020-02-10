@@ -82,7 +82,7 @@ Hier lassen sich mehrere Erkenntnisse für unsere Anwendung extrahieren. Der ver
 SURF ist schneller als SIFT und erzeugt qualitativ bessere Ergebnisse als ORB, allerdings ist der Algorithmus trotzdem insgesamt sehr langsam ohne die Ergebnisse soweit zu verbessern, dass die längere Berechnungszeit gerechtfertigt wäre.
 ORB bietet mit Abstand die beste Performance. Die Ergebnisse sind allerdings sehr instabil und zeigen starkes Flackern. Dieser Effekt wurde durch ein Smoothing über die Zeit versucht auszugleichen, damit wurde das Bild minimal ruhiger. Zudem kann ORB bereits bei zwei Karten gleichzeitig nicht mehr angewendet werden. Die zusätzliche Karte wird nur in seltenen Fällen erkannt und lässt sich aufgrund von Überschneidungen zur ersten Karte nicht identifizieren.
 
-![alt text](./assets/gifs/ORB_1_card.gif)
+![alt text](./assets/gifs/ORB_1_card_small.gif)
 
 SIFT bietet in jedem Fall exzellente Ergebnisse. Die Erkennung ist extrem stabil und verlässlich. Dies kommt bringt Abzüge in der Performance. Bereits bei einer einzigen Karte ist das Resultat mit knapp 10 Frames die Sekunde nur noch bedingt geeignet. Besonders bei mehreren Karten leidet die Performance enorm. Diesem Effekt wurde durch eine Reduktion der extrahierten Features entgegen gewirkt, allerdings finden sich dadurch bei mehreren Karten nicht mehr genug Features um jede Karte zu identifizieren.
 
