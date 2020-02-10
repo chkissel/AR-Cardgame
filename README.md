@@ -16,7 +16,6 @@
 Das Projekt 'AR-Cardgame' erweitert das beliebte 'Trading Card'-Spielprinzip um eine neue Erlebnisebene. Mit Hilfe von Augmented Reality(AR)-Techniken werden Figuren auf den Spielkarten eingeblendet. Außerdem wird die Lage der Karte, und somit ihr Zustand, automatisch erkannt. So befinden sich Karten, die parallel zum Gegner ausgerichtet liegen, in einer Art Verteidigungsposition.
 Das zu diesem Zweck geschriebene Python-Programm bedient sich verschiedener Frameworks und Bibliotheken. Diese sowie der generelle Programmaufbau werden im Folgenden beschrieben. Weiterhin wird evaluiert welche Faktoren einen Einfluss auf die Performance und Stabilität des Programms nehmen. Zum Schluss werden noch einige Technologien zum Rendering der AR-Inhalte vorgestellt.
 
-![alt text](./assets/gifs/ORB_1_card.gif)
 
 ### Requirements
 #### Versionen
@@ -46,7 +45,7 @@ pip install opencv-python numpy Panda3D
 ### Programm
 #### Funktionaler Ablauf
 
-Das Programm startet mit einer Initialisierungsphase in der die verschiedenen verwendeten Klassen geladen werden. Zudem werden benötigte Spielkarten geladen, das Modell sowie Bild geladen und deren Features extrahiert. Karten die während der Laufzeit erkannt werden sollen werden in eine Liste geschrieben durch die im Loop des Programmes iteriert wird.
+Das Programm startet mit einer Initialisierungsphase in der die verschiedenen verwendeten Klassen geladen werden. Zudem werden benötigte Spielkarten, das Modell sowie Bild geladen und deren Features extrahiert. Karten die während der Laufzeit erkannt werden sollen in eine Liste geschrieben werden, durch die im Loop des Programmes iteriert wird.
 Im Loop wird das aktuelle Kamerabild ausgelesen und Features daraus extrahiert. Anschließend werden für jede Karte in der Kartenliste folgende Aktionen durchgeführt.
 
 - Kartenfeatures mit Bildfeatures matchen
@@ -80,14 +79,14 @@ Bildfeatures können mit verschiedenen Algorithmen bestimmt werden. Für dieses 
 | 4       | SIFT + BF knn-Matching          | 3 FPS       | (5) EXCELLENT   |
 
 Hier lassen sich mehrere Erkenntnisse für unsere Anwendung extrahieren. Der verwendete Matching-Algorithmus hat wenig bis keine Auswirkungen auf Performance oder Qualität.
-SURF ist schneller als SIFT und erzeugt qualitativ bessere Ergebnisse als ORB, allerdings ist der Algorithmus trotzdem insgesamt sehr langsam ohne die Ergebnisse soweit zu verbessern das die längere Berechnungszeit gerechtfertigt ist.
+SURF ist schneller als SIFT und erzeugt qualitativ bessere Ergebnisse als ORB, allerdings ist der Algorithmus trotzdem insgesamt sehr langsam ohne die Ergebnisse soweit zu verbessern, dass die längere Berechnungszeit gerechtfertigt wäre.
 ORB bietet mit Abstand die beste Performance. Die Ergebnisse sind allerdings sehr instabil und zeigen starkes Flackern. Dieser Effekt wurde durch ein Smoothing über die Zeit versucht auszugleichen, damit wurde das Bild minimal ruhiger. Zudem kann ORB bereits bei zwei Karten gleichzeitig nicht mehr angewendet werden. Die zusätzliche Karte wird nur in seltenen Fällen erkannt und lässt sich aufgrund von Überschneidungen zur ersten Karte nicht identifizieren.
 
-VIDEO ORB
+![alt text](./assets/gifs/ORB_1_card.gif)
 
 SIFT bietet in jedem Fall exzellente Ergebnisse. Die Erkennung ist extrem stabil und verlässlich. Dies kommt bringt Abzüge in der Performance. Bereits bei einer einzigen Karte ist das Resultat mit knapp 10 Frames die Sekunde nur noch bedingt geeignet. Besonders bei mehreren Karten leidet die Performance enorm. Diesem Effekt wurde durch eine Reduktion der extrahierten Features entgegen gewirkt, allerdings finden sich dadurch bei mehreren Karten nicht mehr genug Features um jede Karte zu identifizieren.
 
-VIDEO SIFT
+![alt text](./assets/gifs/SIFT_1_card_bf_knnmatch.gif)
 
 Abschließend lässt sich hier festhalten, das keiner der Algorithmen alle Ansprüche erfüllen konnte. Das liegt natürlich auch daran, dass die Karten als Ersatz für AR Marker wenig geeignet sind. Die Karten weisen abseits des Bildes viele Überschneidungen in Text und Symbolik auf. Hier ist es vor allem für ORB schwierig zwischen den Karten zu unterscheiden. Wird lediglich das Bild der Karte verwendet findet ORB wiederum nicht genug Features um die Karte zu erkennen. SIFT bietet eine sehr sichere Erkennung auf Kosten der Performance. Möglicherweise lässt sich die Erkennung mit SIFT soweit optimieren als das die gefundenen Punkte nicht neu gematcht sondern im Bild verfolgt werden.
 
@@ -136,6 +135,8 @@ rot_2 = rotations[:, 1]
 Nachdem die Funktionalität des AR-Tracking stand, sollte noch das Rendering der 3D-Modelle verbessert werden. So bietet nur OpenCV alleine nicht die Möglichkeit die Objekte mit Texturen zu versehen oder sie zu beleuchten. Daher wurden drei Frameworks zum Rendering in Python ausprobiert: PyGame, PyOpenGL und Panda3D.
 Alle drei Programmbibliothek enthalten Module zum Abspielen und Steuern von Grafikelementen. Ein weiteres Kriterium war die einfache Integrierung der OpenCV-Funktionen in die Render-Pipeline. Alle drei Kandidaten erfüllten diese Voraussetzung, allerdings gestaltete sich die Übersetzung der Zahlenräume und Koordinatensystem in die jeweilige Umgebung als äußerst schwierig. Deshalb wird in diesem Kapitel eine nur halbfunktionale Implementierung vorgestellt.
 Der Prototyp wurde letztendlich in Panda3D umgesetzt. Die Entscheidung für Panda3D fiel insbesondere auf Grund der großen Community und guten Dokumentation, die das Arbeiten mit dem Framework extrem erleichtern.
+
+![alt text](./assets/gifs/panda_final.gif)
 
 Ein Panda3D-Programm geht immer von einer Klasse aus, die das ShowBase-Objekt erbt. In der __init__()-Funktion der Klasse befindet sich der 'Scene Graph'. In diesem werden alle Objekte definiert die während der Laufzeit gerendert werden sollen.
 
