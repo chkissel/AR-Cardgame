@@ -54,7 +54,7 @@ python pandaMain.py
 ### Programm
 #### Funktionaler Ablauf
 
-Das Programm startet mit einer Initialisierungsphase in der die verschiedenen verwendeten Klassen geladen werden. Zudem werden benötigte Spielkarten, das Modell sowie Bild geladen und deren Features extrahiert. Karten die während der Laufzeit erkannt werden sollen in eine Liste geschrieben werden, durch die im Loop des Programmes iteriert wird.
+Das Programm startet durch das Drücken der Nummerntaste **'1'** mit einer Initialisierungsphase in der die verschiedenen verwendeten Klassen geladen werden. Zudem werden benötigte Spielkarten, das Modell sowie Bild geladen und deren Features extrahiert. Karten die während der Laufzeit erkannt werden sollen in eine Liste geschrieben werden, durch die im Loop des Programmes iteriert wird.
 Im Loop wird das aktuelle Kamerabild ausgelesen und Features daraus extrahiert. Anschließend werden für jede Karte in der Kartenliste folgende Aktionen durchgeführt.
 
 - Kartenfeatures mit Bildfeatures matchen
